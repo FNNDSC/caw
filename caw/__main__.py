@@ -63,7 +63,7 @@ def upload(
     if no_feed:
         raise typer.Exit()
 
-    dircopy_instance = client.run('pl-dircopy', {'dir': swift_path})
+    dircopy_instance = client.run('pl-dircopy', params={'dir': swift_path})
     if name:
         dircopy_instance.get_feed().set_name(name)
     if description:

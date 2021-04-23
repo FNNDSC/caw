@@ -104,7 +104,7 @@ class ChrisClient:
         if params is None:
             params = {}
 
-        pl = self.get_plugin(plugin_name, plugin_url)
+        pl = self.get_plugin(name_exact=plugin_name, url=plugin_url)
         payload = collection_helper(params)
 
         res = self.s.post(pl['instances'], json=payload)
