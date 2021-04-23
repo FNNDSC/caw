@@ -152,16 +152,17 @@ class ChrisClient:
         res = self._s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
         return res['results']
 
-    def search_pipelines(self, name: str) -> Pipeline:
-
-
-    def get_pipeline(self, name: str) -> Pipeline:
+    def search_pipelines(self, name='') -> Set[Pipeline]:
         payload = {
             'name': name
         }
         res = self._s.get(self.collection_links['pipelines'] + 'search/', params=payload)
         res.raise_for_status()
         data = res.json()
-        if data['count'] < 1:
+        return set(Pipeline(**p, session=self._s) for p in data['results'])
+
+    def get_pipeline(self, name: str) -> Pipeline:
+        search = self.search_pipelines(name)
+        if not search:
             raise PipelineNotFoundError(name)
-        return Pipeline(**data['results'][0], session=self._s)
+        return search.pop()

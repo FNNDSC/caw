@@ -45,6 +45,12 @@ def version():
     typer.echo(program_info['version'])
 
 
+@app.command(help='Search for pipelines that are saved in ChRIS.')
+def search(name: str = typer.Argument('', help='name of pipeline to search for')):
+    for pipeline in client.search_pipelines(name):
+        typer.echo(f'{pipeline.url:<60}{typer.style(pipeline.name, bold=True)}')
+
+
 def get_pipeline(name: str) -> Pipeline:
     try:
         return client.get_pipeline(name)
