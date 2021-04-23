@@ -1,6 +1,6 @@
 from os import path
 import requests
-from typing import Optional, Set
+from typing import Optional, Set, Union
 
 from chrisclient2.models import PluginInstance, Plugin, Pipeline, Piping
 
@@ -17,10 +17,33 @@ class PipelineNotFoundError(ChrisResourceNotFoundError):
     pass
 
 
+def run_pipeline_generator(pipeline: Pipeline, plugin_instance: PluginInstance):
+    """
+    Run a pipeline as a plugin instance generator. Every next() creates a plugin instance.
+    :param pipeline: pipeline to run
+    :param plugin_instance: plugin instance from which to start the pipeline
+    """
+    assembly = pipeline.assemble()
+    q = assembly.to_queue()
+    while not q.empty():
+        p = q.get_nowait()
+        params = {
+            'previous_id': plugin_instance.id
+        }
+        params.update(p.default_parameters)
+        next_instance = p.plugin.create_instance(params)
+        q.task_done()
+        yield next_instance
+        plugin_instance = next_instance
+
+
 class ChrisClient:
-    def __init__(self, address, username, password):
+    def __init__(self, address: str, username: str, password: str):
+        if not address.endswith('/api/v1/'):
+            raise ValueError('Address of CUBE must end with "/api/v1/"')
         self.addr = address
-        self.search_addr = path.join(address, 'plugins/search/')
+        self.search_addr_plugins = address + 'plugins/search/'
+        self.search_addr_plugins_instances = address + 'plugins/instances/search/'
 
         self._s = requests.Session()
         self._s.auth = (username, password)
@@ -59,6 +82,11 @@ class ChrisClient:
         res.raise_for_status()
         return res.json()
 
+    def _url2plugin(self, url):
+        res = self._s.get(url)
+        res.raise_for_status()
+        return Plugin(**res.json(), session=self._s)
+
     def get_plugin(self, name_exact='', version='', url='') -> Plugin:
         """
         Get a single plugin, either searching for it by its exact name, or by URL.
@@ -71,9 +99,7 @@ class ChrisClient:
             search = self.search_plugin(name_exact, version)
             return search.pop()
         elif url:
-            res = self._s.get(url)
-            res.raise_for_status()
-            return Plugin(**res.json(), session=self._s)
+            return self._url2plugin(url)
         else:
             raise ValueError('Must give either plugin name or url')
 
@@ -83,12 +109,22 @@ class ChrisClient:
         }
         if version:
             payload['version'] = version
-        res = self._s.get(self.search_addr, params=payload)
+        res = self._s.get(self.search_addr_plugins, params=payload)
         res.raise_for_status()
         data = res.json()
         if data['count'] < 1:
             raise PluginNotFoundError(name_exact)
         return set(Plugin(**pldata, session=self._s) for pldata in data['results'])
+
+    def get_plugin_instance(self, id: Union[int, str]):
+        """
+        Get a plugin instance.
+        :param id: Either a plugin instance ID or URL
+        :return: plugin instance
+        """
+        res = self._s.get(id if '/' in id else f'{self.addr}plugins/instances/{id}/')
+        res.raise_for_status()
+        return PluginInstance(**res.json())
 
     def run(self, plugin_name='', plugin_url='', plugin: Optional[PluginInstance] = None,
             params: Optional[dict] = None) -> PluginInstance:
@@ -125,10 +161,3 @@ class ChrisClient:
         if data['count'] < 1:
             raise PipelineNotFoundError(name)
         return Pipeline(**data['results'][0], session=self._s)
-
-    def run_pipeline(self, pipeline: Pipeline, plugin_instance: PluginInstance):
-        assembly = pipeline.assemble()
-        self._build_pipeline_feed(assembly, plugin_instance)
-
-    def _build_pipeline_feed(self, piping: Piping, plugin_instance: PluginInstance):
-        pass

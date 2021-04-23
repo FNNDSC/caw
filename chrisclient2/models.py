@@ -1,12 +1,13 @@
 import requests
 from chrisclient2.util import collection_helper, PaginationNotImplementedException
-from typing import Optional, Set, List
+from typing import Optional, Set
 from abc import ABC
+from queue import Queue
 
 
 class ConnectedResource(ABC):
     """
-    An object returned from the CUBE API which can make more requests to the API.
+    An object returned from the CUBE API which can make further requests to the API.
     """
     def __init__(self, url: str, session: requests.Session):
         self.url = url
@@ -72,24 +73,46 @@ class Piping:
     A node of a directed acyclic graph representation of a pipeline.
     """
     def __init__(self, id: int, pipeline: str, pipeline_id: int, plugin: str, plugin_id: int, url: str,
-                 default_parameters: List[dict], previous: Optional[str], previous_id: Optional[int] = None):
+                 default_parameters: dict, session: requests.Session, previous: Optional[str],
+                 previous_id: Optional[int] = None):
         self.id = id
         self.pipeline = pipeline
         self.pipeline_id = pipeline_id
-        self.plugin = plugin
         self.plugin_id = plugin_id
         self.url = url
         self.previous = previous
         self.previous_id = previous_id
-        self.next: Set['Piping'] = set()
+        self.children: Set['Piping'] = set()
+        """Graph edges to children"""
         self.parent: Optional['Piping'] = None
+        """Graph edge to parent"""
         self.default_parameters = default_parameters
+
+        res = session.get(plugin)
+        res.raise_for_status()
+        self.plugin = Plugin(**res.json(), session=session)
 
     def __hash__(self):
         return hash((self.id, self.pipeline_id))
 
     def add_child(self, child: 'Piping'):
-        self.next.add(child)
+        self.children.add(child)
+
+    def to_queue(self) -> Queue:
+        """
+        Convert the tree to a queue where the root is first, and dependency plugins appear
+        before the plugins which depend on them.
+        :return: queue for a breadth-first traversal over the graph
+        """
+        q = Queue()
+        self._add_all_to_queue(q, self)
+        return q
+
+    @classmethod
+    def _add_all_to_queue(cls, q: Queue, p: 'Piping'):
+        q.put(p)
+        for c in p.children:
+            cls._add_all_to_queue(q, c)
 
 
 class PipelineAssemblyException(Exception):
@@ -113,29 +136,25 @@ class PipelineRootNotFoundException(PipelineAssemblyException):
     pass
 
 
-class Pipeline:
-    def __init__(self, authors: str, description: str, name: str,
-                 plugin_pipings: str, default_parameters: str, plugins: str, url: str,
-                 session: requests.Session, **kwargs):
+class Pipeline(ConnectedResource):
+    def __init__(self, authors: str, description: str, name: str, plugin_pipings: str, default_parameters: str,
+                 plugins: str, url: str, session: requests.Session, **kwargs):
+        super().__init__(url, session)
         self.authors = authors
         self.description = description
         self.name = name
         self.plugin_pipings = plugin_pipings
         self.default_parameters = default_parameters
         self.plugins = plugins
-        self.url = url
-        self._session = session
+        self.pipings = self._do_get(self.plugin_pipings)
 
     def _do_get(self, url):
-        res = self._session.get(url, params={'limit': 50, 'offset': 0})
+        res = self._s.get(url, params={'limit': 50, 'offset': 0})
         res.raise_for_status()
         data = res.json()
         if data['next']:
             raise PaginationNotImplementedException()
         return data['results']
-
-    def get_pipings(self):
-        return self._do_get(self.plugin_pipings)
 
     def get_default_parameters(self):
         return self._do_get(self.default_parameters)
@@ -147,42 +166,40 @@ class Pipeline:
         through the previous key) and couples parameter info with plugin info.
         :return: DAG
         """
-
         # collect all default parameters
         assembled_params = {}
         for param_info in self.get_default_parameters():
             i = param_info['plugin_piping_id']
             if i not in assembled_params:
-                assembled_params[i] = []
-            assembled_params[i].append({
-                param_info['param_name']: param_info['value']
-            })
+                assembled_params[i] = {}
+            assembled_params[i][param_info['param_name']] = param_info['value']
 
-        pipings = {}
-        root = None
+        pipings_map = {}
+        root: Optional[Piping] = None
 
         # create DAG nodes
-        for piping_info in self.get_pipings():
+        for piping_info in self.pipings:
             i = piping_info['id']
             if i in assembled_params:
                 params = assembled_params[i]
             else:
-                params = []
-            piping = Piping(**piping_info, default_parameters=params)
+                params = {}
+            piping = Piping(**piping_info, default_parameters=params, session=self._s)
+            pipings_map[i] = piping
+
             if not piping.previous:
                 if root:
                     raise PipelineHasMultipleRootsException()
                 root = piping
-            pipings[i] = piping
         if not root:
             raise PipelineRootNotFoundException()
 
         # create bidirectional DAG edges
-        for _, piping in pipings.items():
+        for _, piping in pipings_map.items():
             i = piping.previous_id
             if not i:
                 continue
-            pipings[i].add_child(piping)
-            piping.parent = pipings[i]
+            pipings_map[i].add_child(piping)
+            piping.parent = pipings_map[i]
 
         return root
