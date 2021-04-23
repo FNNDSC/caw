@@ -16,43 +16,55 @@ pip install -U caw
 
 ### Usage
 
-```console
-$ caw [OPTIONS] COMMAND [ARGS]...
+```shell
+caw [OPTIONS] COMMAND [ARGS]...
 ```
 
 Container usage is also supported.
 
 
-```console
-docker run --rm -t -v $PWD/data:/data:ro fnndsc/caw:latest caw upload /data
-podman run --rm -t -v $PWD/data:/data:ro fnndsc/caw:latest caw upload /data
+```shell
+docker run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
+podman run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
 singularity exec docker://fnndsc/caw:latest caw upload ./data
 ```
 
 ## Documentation
 
+### Logging In
 
-**Options**:
+ChRIS user account credentials can be passed via command-line arguments or environment variables.
+It's safer to use environment variables (so that your password isn't saved to history)
+and also easier (no need to retype it out everytime).
 
-* `-a, --address TEXT`: [env var: CHRIS_URL; default: http://localhost:8000/api/v1/]
-* `-u, --username TEXT`: [env var: CHRIS_USERNAME; default: chris]
-* `-p, --password TEXT`: [env var: CHRIS_PASSWORD; default: chris1234]
-* `--help`: Show this message and exit.
+```shell
+# using cli arguments
+caw --address https://cube.chrisproject.org/api/v1/ \
+    --username chrisy        \
+    --password notchris1234  \
+    search
 
-**Commands**:
+# using environment variables
+export CHRIS_URL=https://cube.chrisproject.org/api/v1/
+export CHRIS_USERNAME=chrisy
+export CHRIS_PASSWORD=notchris1234
+
+caw search
+```
+### Commands
 
 * `pipeline`: Run a pipeline on an existing feed.
 * `search`: Search for pipelines that are saved in ChRIS.
 * `upload`: Upload files into ChRIS storage and then run...
 * `version`: Print version.
 
-## `caw pipeline`
+#### `caw pipeline`
 
 Run a pipeline on an existing feed.
 
 **Usage**:
 
-```console
+```shell
 $ caw pipeline [OPTIONS] NAME
 ```
 
@@ -65,13 +77,13 @@ $ caw pipeline [OPTIONS] NAME
 * `--target TEXT`: Plugin instance ID or URL.  [default: ]
 * `--help`: Show this message and exit.
 
-## `caw search`
+#### `caw search`
 
 Search for pipelines that are saved in ChRIS.
 
 **Usage**:
 
-```console
+```shell
 $ caw search [OPTIONS] [NAME]
 ```
 
@@ -83,13 +95,13 @@ $ caw search [OPTIONS] [NAME]
 
 * `--help`: Show this message and exit.
 
-## `caw upload`
+#### `caw upload`
 
 Upload files into ChRIS storage and then run pl-dircopy, printing the URL for the newly created plugin instance.
 
 **Usage**:
 
-```console
+```shell
 $ caw upload [OPTIONS] FILES...
 ```
 
@@ -130,4 +142,11 @@ Run all tests using the command
 
 ```shell
 python -m unittest
+```
+
+To generate (Markdown) documentation:
+
+```shell
+pip install typer-cli
+typer caw.__main__ utils docs --name caw
 ```
