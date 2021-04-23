@@ -44,6 +44,7 @@ class ChrisClient:
         self.addr = address
         self.search_addr_plugins = address + 'plugins/search/'
         self.search_addr_plugins_instances = address + 'plugins/instances/search/'
+        self.search_addr_pipelines = address + 'pipelins/search/'
 
         self._s = requests.Session()
         self._s.auth = (username, password)
@@ -150,6 +151,9 @@ class ChrisClient:
 
         res = self._s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
         return res['results']
+
+    def search_pipelines(self, name: str) -> Pipeline:
+
 
     def get_pipeline(self, name: str) -> Pipeline:
         payload = {
