@@ -2,6 +2,7 @@ from unittest import TestCase
 from chrisclient2.chrisclient import ChrisClient
 from chrisclient2.models import Piping
 
+
 class TestChrisClient(TestCase):
 
     client = ChrisClient(
@@ -11,21 +12,17 @@ class TestChrisClient(TestCase):
     )
 
     def test_get_plugin_by_name(self):
-        res = self.client.get_plugin(name_exact='pl-tsdircopy')
-        self.assertIn('name', res)
-        self.assertEqual(res['name'], 'pl-tsdircopy')
+        plugin = self.client.get_plugin(name_exact='pl-tsdircopy')
+        self.assertEqual(plugin.name, 'pl-tsdircopy')
 
     def test_get_plugin_by_version(self):
-        res = self.client.get_plugin(name_exact='pl-dircopy', version='2.1.0')
-        self.assertIn('name', res)
-        self.assertEqual(res['name'], 'pl-dircopy')
-        self.assertIn('version', res)
-        self.assertEqual(res['version'], '2.1.0')
+        plugin = self.client.get_plugin(name_exact='pl-dircopy', version='2.1.0')
+        self.assertEqual(plugin.name, 'pl-dircopy')
+        self.assertEqual(plugin.version, '2.1.0')
 
     def test_get_plugin_by_url(self):
-        res = self.client.get_plugin(url='http://localhost:8000/api/v1/plugins/2/')
-        self.assertIn('name', res)
-        self.assertIn('min_memory_limit', res)
+        plugin = self.client.get_plugin(url='http://localhost:8000/api/v1/plugins/2/')
+        self.assertEqual(plugin.url, 'http://localhost:8000/api/v1/plugins/2/')
 
     def test_get_pipeline(self):
         pipeline = self.client.get_pipeline('Automatic Fetal Brain Reconstruction Pipeline')

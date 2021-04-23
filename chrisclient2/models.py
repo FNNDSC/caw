@@ -1,12 +1,24 @@
 import requests
 from chrisclient2.util import collection_helper, PaginationNotImplementedException
 from typing import Optional, Set, List
+from abc import ABC
 
 
-class Feed:
-    def __init__(self, session: requests.Session, feed_url):
+class ConnectedResource(ABC):
+    """
+    An object returned from the CUBE API which can make more requests to the API.
+    """
+    def __init__(self, url: str, session: requests.Session):
+        self.url = url
         self._s = session
-        self.url = feed_url
+
+    def __hash__(self):
+        return hash(self.url)
+
+
+class Feed(ConnectedResource):
+    def __init__(self, feed_url, session: requests.Session):
+        super().__init__(feed_url, session)
 
         res = self._s.get(feed_url).json()
         self._note_url = res['note']
@@ -27,16 +39,32 @@ class Feed:
         return res.json()
 
 
-class PluginInstance:
+class PluginInstance(ConnectedResource):
     def __init__(self, url: str, id: int, title: str, feed: str, session: requests.Session, **kwargs):
-        self.url = url
+        super().__init__(url, session)
         self.id = id
         self.title = title
         self.feed = feed
-        self._session = session
 
     def get_feed(self):
-        return Feed(session=self._session, feed_url=self.feed)
+        return Feed(feed_url=self.feed, session=self._s)
+
+
+class Plugin(ConnectedResource):
+    def __init__(self, id: int, name: str, version: str,
+                 instances: str, url: str, session: requests.Session, **kwargs):
+        super().__init__(url, session)
+        self.id = id
+        self.name = name
+        self.version = version
+        self.instances = instances
+
+    def create_instance(self, params: dict = None) -> PluginInstance:
+        payload = collection_helper(params)
+
+        res = self._s.post(self.instances, json=payload)
+        res.raise_for_status()
+        return PluginInstance(**res.json(), session=self._s)
 
 
 class Piping:

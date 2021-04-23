@@ -1,8 +1,8 @@
 from os import path
 import requests
+from typing import Optional, Set
 
-from chrisclient2.models import PluginInstance, Pipeline
-from chrisclient2.util import collection_helper
+from chrisclient2.models import PluginInstance, Plugin, Pipeline, Piping
 
 
 class ChrisResourceNotFoundError(Exception):
@@ -20,18 +20,16 @@ class PipelineNotFoundError(ChrisResourceNotFoundError):
 class ChrisClient:
     def __init__(self, address, username, password):
         self.addr = address
-
-        # TODO put this in collection_links
         self.search_addr = path.join(address, 'plugins/search/')
 
-        self.s = requests.Session()
-        self.s.auth = (username, password)
-        self.s.headers.update({
+        self._s = requests.Session()
+        self._s.auth = (username, password)
+        self._s.headers.update({
             'Accept': 'application/json',
             'Content-Type': 'application/vnd.collection+json',
         })
 
-        res = self.s.get(address).json()
+        res = self._s.get(address).json()
         self.collection_links = res['collection_links']
         assert self.collection_links['uploadedfiles']
 
@@ -50,7 +48,7 @@ class ChrisClient:
                 'upload_path': (None, upload_path),
                 'fname': (bname, file_object)
             }
-            res = self.s.post(
+            res = self._s.post(
                 self.collection_links['uploadedfiles'],
                 files=files,
                 headers={
@@ -61,7 +59,7 @@ class ChrisClient:
         res.raise_for_status()
         return res.json()
 
-    def get_plugin(self, name_exact='', version='', url=''):
+    def get_plugin(self, name_exact='', version='', url='') -> Plugin:
         """
         Get a single plugin, either searching for it by its exact name, or by URL.
         :param name_exact: name of plugin
@@ -71,46 +69,41 @@ class ChrisClient:
         """
         if name_exact:
             search = self.search_plugin(name_exact, version)
-            return search[0]
+            return search.pop()
         elif url:
-            res = self.s.get(url)
+            res = self._s.get(url)
             res.raise_for_status()
-            data = res.json()
-            return data
+            return Plugin(**res.json(), session=self._s)
         else:
             raise ValueError('Must give either plugin name or url')
 
-    def search_plugin(self, name_exact: str, version: ''):
+    def search_plugin(self, name_exact: str, version: '') -> Set[Plugin]:
         payload = {
             'name_exact': name_exact
         }
         if version:
             payload['version'] = version
-        res = self.s.get(self.search_addr, params=payload)
+        res = self._s.get(self.search_addr, params=payload)
         res.raise_for_status()
         data = res.json()
         if data['count'] < 1:
             raise PluginNotFoundError(name_exact)
-        return data['results']
+        return set(Plugin(**pldata, session=self._s) for pldata in data['results'])
 
-    def run(self, plugin_name='', plugin_url='', params: dict = None) -> PluginInstance:
+    def run(self, plugin_name='', plugin_url='', plugin: Optional[PluginInstance] = None,
+            params: Optional[dict] = None) -> PluginInstance:
         """
-        Create a plugin instance.
+        Create a plugin instance. Either procide a plugin object,
+        or search for a plugin by name or URL.
+        :param plugin: plugin to run
         :param plugin_name: name of plugin to run
         :param plugin_url: alternatively specify plugin URL
         :param params: plugin parameters as key-value pairs (not collection+json)
         :return:
         """
-        if params is None:
-            params = {}
-
-        pl = self.get_plugin(name_exact=plugin_name, url=plugin_url)
-        payload = collection_helper(params)
-
-        res = self.s.post(pl['instances'], json=payload)
-        res.raise_for_status()
-        result = res.json()
-        return PluginInstance(**result, session=self.s)
+        if not plugin:
+            plugin = self.get_plugin(name_exact=plugin_name, url=plugin_url)
+        return plugin.create_instance(params)
 
     def get_uploadedfile(self, fname='', fname_exact=''):
         query = {}
@@ -119,16 +112,23 @@ class ChrisClient:
         if fname_exact:
             query['fname_exact'] = fname_exact
 
-        res = self.s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
+        res = self._s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
         return res['results']
 
     def get_pipeline(self, name: str) -> Pipeline:
         payload = {
             'name': name
         }
-        res = self.s.get(self.collection_links['pipelines'] + 'search/', params=payload)
+        res = self._s.get(self.collection_links['pipelines'] + 'search/', params=payload)
         res.raise_for_status()
         data = res.json()
         if data['count'] < 1:
             raise PipelineNotFoundError(name)
-        return Pipeline(**data['results'][0], session=self.s)
+        return Pipeline(**data['results'][0], session=self._s)
+
+    def run_pipeline(self, pipeline: Pipeline, plugin_instance: PluginInstance):
+        assembly = pipeline.assemble()
+        self._build_pipeline_feed(assembly, plugin_instance)
+
+    def _build_pipeline_feed(self, piping: Piping, plugin_instance: PluginInstance):
+        pass
