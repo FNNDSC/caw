@@ -1,3 +1,7 @@
+class PaginationNotImplementedException(Exception):
+    pass
+
+
 def collection_helper(obj: dict) -> dict:
     return {
         'template': {

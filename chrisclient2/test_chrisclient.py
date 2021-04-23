@@ -26,3 +26,10 @@ class TestChrisClient(TestCase):
         res = self.client.get_plugin(url='http://localhost:8000/api/v1/plugins/2/')
         self.assertIn('name', res)
         self.assertIn('min_memory_limit', res)
+
+    def test_get_pipeline(self):
+        pipeline = self.client.get_pipeline('Automatic Fetal Brain Reconstruction Pipeline')
+        pipings = pipeline.get_pipings()
+        self.assertGreater(len(pipings), 2)
+        self.assertIn('plugin', pipings[1])
+        self.assertIn('previous', pipings[1])

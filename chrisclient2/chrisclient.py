@@ -1,11 +1,19 @@
 from os import path
 import requests
 
-from chrisclient2.models import PluginInstance, Feed
+from chrisclient2.models import PluginInstance, Pipeline
 from chrisclient2.util import collection_helper
 
 
-class PluginNotFoundError(Exception):
+class ChrisResourceNotFoundError(Exception):
+    pass
+
+
+class PluginNotFoundError(ChrisResourceNotFoundError):
+    pass
+
+
+class PipelineNotFoundError(ChrisResourceNotFoundError):
     pass
 
 
@@ -113,3 +121,14 @@ class ChrisClient:
 
         res = self.s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
         return res['results']
+
+    def get_pipeline(self, name: str) -> Pipeline:
+        payload = {
+            'name': name
+        }
+        res = self.s.get(self.collection_links['pipelines'] + 'search/', params=payload)
+        res.raise_for_status()
+        data = res.json()
+        if data['count'] < 1:
+            raise PipelineNotFoundError(name)
+        return Pipeline(**data['results'][0], session=self.s)
