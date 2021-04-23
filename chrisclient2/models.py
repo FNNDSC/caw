@@ -40,19 +40,27 @@ class PluginInstance:
 
 class Pipeline:
     def __init__(self, authors: str, description: str, name: str,
-                 plugin_pipings: str, plugins: str, url: str, session: requests.Session, **kwargs):
+                 plugin_pipings: str, default_parameters: str, plugins: str, url: str,
+                 session: requests.Session, **kwargs):
         self.authors = authors
         self.description = description
         self.name = name
         self.plugin_pipings = plugin_pipings
+        self.default_parameters = default_parameters
         self.plugins = plugins
         self.url = url
         self._session = session
 
-    def get_pipings(self):
-        res = self._session.get(self.plugin_pipings)
+    def _do_get(self, url):
+        res = self._session.get(url, params={'limit': 50, 'offset': 0})
         res.raise_for_status()
         data = res.json()
         if data['next']:
             raise PaginationNotImplementedException()
         return data['results']
+
+    def get_pipings(self):
+        return self._do_get(self.plugin_pipings)
+
+    def get_default_parameters(self):
+        return self._do_get(self.default_parameters)
