@@ -47,7 +47,7 @@ class TestUpload(unittest.TestCase):
             upload_threads=2
         )
 
-        results = self.client.get_uploadedfiles(fname='chris/uploads/caw/test_upload/')
+        results = self.client.get_uploadedfile(fname='chris/uploads/caw/test_upload/')
         fnames = [os.path.basename(result['fname']) for result in results]
         self.assertIn(os.path.basename(self.file1.name), fnames)
         self.assertIn(os.path.basename(self.file2.name), fnames)

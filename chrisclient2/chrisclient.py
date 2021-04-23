@@ -104,7 +104,7 @@ class ChrisClient:
         result = res.json()
         return PluginInstance(**result, session=self.s)
 
-    def get_uploadedfiles(self, fname='', fname_exact=''):
+    def get_uploadedfile(self, fname='', fname_exact=''):
         query = {}
         if fname:
             query['fname'] = fname
