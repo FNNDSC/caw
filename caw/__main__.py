@@ -70,7 +70,7 @@ def run_pipeline(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
                   'printing the URL for the newly created plugin instance.')
 def upload(
         threads: int = typer.Option(4, '--threads', '-t', help='Number of threads to use for file upload.'),
-        no_feed: bool = typer.Option(False, help='Upload files without running pl-dircopy.'),
+        create_feed: bool = typer.Option(True, help='Run pl-dircopy on the newly uploaded files.'),
         name: str = typer.Option('', '--name', '-n', help='Name of the feed.'),
         description: str = typer.Option('', '--description', '-d', help='Description of the feed.'),
         pipeline: str = typer.Option('', '--pipeline', '-p', help='Name of pipeline to run on the data.'),
@@ -87,7 +87,7 @@ def upload(
         typer.secho('Upload unsuccessful', fg=typer.colors.RED, err=True)
         raise typer.Abort()
 
-    if no_feed:
+    if not create_feed:
         raise typer.Exit()
 
     dircopy_instance = client.run('pl-dircopy', params={'dir': swift_path})
