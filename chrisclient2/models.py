@@ -1,8 +1,16 @@
+import os
 import requests
+from datetime import datetime
 from chrisclient2.util import collection_helper, PaginationNotImplementedException
-from typing import Optional, Set
+from typing import Optional, Set, Union, Iterator
+from collections.abc import Iterable
+from pathlib import Path
 from abc import ABC
 from queue import Queue
+import logging
+
+
+PAGINATION_LIMIT = os.getenv('CAW_PAGINATION_LIMIT', 64)
 
 
 class ConnectedResource(ABC):
@@ -68,10 +76,11 @@ class Plugin(ConnectedResource):
         return PluginInstance(**res.json(), session=self._s)
 
 
-class Piping:
+class Piping(Iterable):
     """
     A node of a directed acyclic graph representation of a pipeline.
     """
+
     def __init__(self, id: int, pipeline: str, pipeline_id: int, plugin: str, plugin_id: int, url: str,
                  default_parameters: dict, session: requests.Session, previous: Optional[str],
                  previous_id: Optional[int] = None):
@@ -98,7 +107,7 @@ class Piping:
     def add_child(self, child: 'Piping'):
         self.children.add(child)
 
-    def to_queue(self) -> Queue:
+    def _to_queue(self) -> Queue:
         """
         Convert the tree to a queue where the root is first, and dependency plugins appear
         before the plugins which depend on them.
@@ -113,6 +122,15 @@ class Piping:
         q.put(p)
         for c in p.children:
             cls._add_all_to_queue(q, c)
+
+    def __iter__(self) -> Iterator['Piping']:
+        """
+        Breadth-first graph traversal.
+        """
+        q = self._to_queue()
+        while not q.empty():
+            yield q.get_nowait()
+            q.task_done()
 
 
 class PipelineAssemblyException(Exception):
@@ -149,7 +167,7 @@ class Pipeline(ConnectedResource):
         self.pipings = self._do_get(self.plugin_pipings)
 
     def _do_get(self, url):
-        res = self._s.get(url, params={'limit': 50, 'offset': 0})
+        res = self._s.get(url, params={'limit': PAGINATION_LIMIT, 'offset': 0})
         res.raise_for_status()
         data = res.json()
         if data['next']:
@@ -203,3 +221,71 @@ class Pipeline(ConnectedResource):
             piping.parent = pipings_map[i]
 
         return root
+
+    def __len__(self) -> int:
+        """
+        :return: number of pipings
+        """
+        return len(self.pipings)
+
+    def __iter__(self):
+        return iter(self.assemble())
+
+
+class UploadedFile(ConnectedResource):
+    def __init__(self, creation_date: str, file_resource: str, fname: str, fsize: int, id: int,
+                 owner: str, url: str, session: requests.Session,
+                 feed_id: Optional[int] = None, plugin_inst: Optional[str] = None,
+                 plugin_inst_id: Optional[int] = None):
+        super().__init__(url, session)
+        self.creation_date = datetime.fromisoformat(creation_date)
+        self.file_resource = file_resource
+        self.fname = fname
+        self.fsize = fsize
+        self.id = id
+        self.ownder = owner
+        self.feed_id = feed_id
+        self.plugin_inst = plugin_inst
+        self.plugin_inst_id = plugin_inst_id
+
+    def download(self, destination: Union[Path, str], chunk_size=8192):
+        with self._s.get(self.file_resource, stream=True, headers={'Accept': None}) as r:
+            r.raise_for_status()
+            with open(destination, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=chunk_size):
+                    f.write(chunk)
+
+
+class UploadedFiles(ConnectedResource, Iterable):
+    """
+    Lazy iterable over paginated response.
+    """
+    __logger = logging.getLogger('UploadedFiles')
+
+    def __init__(self, url: str, session: requests.Session):
+        super().__init__(url, session)
+        if 'limit=' not in self.url:
+            self.url += f"{'&' if '?' in self.url else '?'}limit={PAGINATION_LIMIT}"
+        self._initial_data = self._do_get(self.url)
+
+    def __iter__(self) -> Iterator[UploadedFile]:
+        data = self._initial_data  # first page
+        if data['previous'] is not None:
+            self.__logger.warning('%s is not the first page.', self.url)
+
+        while data['next']:
+            for fdata in data['results']:
+                yield UploadedFile(**fdata, session=self._s)
+            self.__logger.debug('next page: %s', data['next'])
+            data = self._do_get(data['next'])  # next page
+        for fdata in data['results']:  # last page
+            yield UploadedFile(**fdata, session=self._s)
+
+    def __len__(self):
+        return self._initial_data['count']
+
+    def _do_get(self, url):
+        self.__logger.info('getting %s', url)
+        res = self._s.get(url)
+        res.raise_for_status()
+        return res.json()

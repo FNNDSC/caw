@@ -2,7 +2,7 @@ from os import path
 import requests
 from typing import Optional, Set, Union
 
-from chrisclient2.models import PluginInstance, Plugin, Pipeline, Piping
+from chrisclient2.models import PluginInstance, Plugin, Pipeline, UploadedFiles
 
 
 class ChrisResourceNotFoundError(Exception):
@@ -23,16 +23,12 @@ def run_pipeline_generator(pipeline: Pipeline, plugin_instance: PluginInstance):
     :param pipeline: pipeline to run
     :param plugin_instance: plugin instance from which to start the pipeline
     """
-    assembly = pipeline.assemble()
-    q = assembly.to_queue()
-    while not q.empty():
-        p = q.get_nowait()
+    for p in pipeline:
         params = {
             'previous_id': plugin_instance.id
         }
         params.update(p.default_parameters)
         next_instance = p.plugin.create_instance(params)
-        q.task_done()
         yield next_instance
         plugin_instance = next_instance
 
@@ -142,15 +138,14 @@ class ChrisClient:
             plugin = self.get_plugin(name_exact=plugin_name, url=plugin_url)
         return plugin.create_instance(params)
 
-    def get_uploadedfile(self, fname='', fname_exact=''):
-        query = {}
-        if fname:
-            query['fname'] = fname
-        if fname_exact:
-            query['fname_exact'] = fname_exact
-
-        res = self._s.get(self.collection_links['uploadedfiles'] + 'search/', params=query).json()
-        return res['results']
+    def search_uploadedfiles(self, fname='', fname_exact='') -> UploadedFiles:
+        query = {
+            'fname': fname,
+            'fname_exact': fname_exact
+        }
+        qs = '&'.join([f'{k}={v}' for k, v in query.items() if v])
+        url = f"{self.collection_links['uploadedfiles']}search/?{qs}"
+        return UploadedFiles(url=url, session=self._s)
 
     def search_pipelines(self, name='') -> Set[Pipeline]:
         payload = {
