@@ -17,7 +17,7 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     python_requires='>=3.8',
-    install_requires=['requests', 'typer'],
+    install_requires=['requests', 'typer', 'shellingham'],
     entry_points={
         'console_scripts': [
             'caw = caw.__main__:app'

@@ -11,21 +11,38 @@ from pathlib import Path
 
 from caw.movedata import upload as cube_upload, download as cube_download
 
-
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
-app = typer.Typer(help='A command line ChRIS client for data management and pipeline execution.')
 client: Optional[ChrisClient] = None
+
+app = typer.Typer(
+    epilog='Examples and documentation at '
+           'https://github.com/FNNDSC/caw#documentation'
+)
+
+
+def show_version():
+    """
+    Print version.
+    """
+    program_info = metadata(__package__)
+    typer.echo(program_info['version'])
+    raise typer.Exit()
 
 
 @app.callback()
 def main(
         address: str = typer.Option('http://localhost:8000/api/v1/', '--address', '-a', envvar='CHRIS_URL'),
         username: str = typer.Option('chris', '--username', '-u', envvar='CHRIS_USERNAME'),
-        password: str = typer.Option('chris1234', '--password', '-p', envvar='CHRIS_PASSWORD')
+        password: str = typer.Option('chris1234', '--password', '-p', envvar='CHRIS_PASSWORD'),
+        version: Optional[bool] = typer.Option(None, '--version', '-V',
+                                               callback=show_version, is_eager=True,
+                                               help='Print version.')
 ):
+    """
+    A command line ChRIS client for pipeline execution and data management.
+    """
     if 'CHRIS_TESTING' not in os.environ and password == 'chris1234':
         typer.secho('Using defaults (set CHRIS_TESTING=y to supress this message): '
                     f'{address}  {username}:{password}', dim=True, err=True)
@@ -39,14 +56,11 @@ def main(
         raise typer.Abort()
 
 
-@app.command(help='Print version.')
-def version():
-    program_info = metadata(__package__)
-    typer.echo(program_info['version'])
-
-
-@app.command(help='Search for pipelines that are saved in ChRIS.')
+@app.command()
 def search(name: str = typer.Argument('', help='name of pipeline to search for')):
+    """
+    Search for pipelines that are saved in ChRIS.
+    """
     for pipeline in client.search_pipelines(name):
         typer.echo(f'{pipeline.url:<60}{typer.style(pipeline.name, bold=True)}')
 
@@ -66,7 +80,18 @@ def run_pipeline(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
             pass
 
 
-@app.command(help='Upload local files from host into ChRIS storage and then run pl-dircopy.')
+@app.command()
+def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
+             target: str = typer.Option(..., help='Plugin instance ID or URL.')):
+    """
+    Run a pipeline on an existing feed.
+    """
+    plugin_instance = client.get_plugin_instance(target)
+    chris_pipeline = get_pipeline(name)
+    run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
+
+
+@app.command()
 def upload(
         threads: int = typer.Option(4, '--threads', '-t', help='Number of threads to use for file upload.'),
         create_feed: bool = typer.Option(True, help='Run pl-dircopy on the newly uploaded files.'),
@@ -76,6 +101,9 @@ def upload(
         files: List[Path] = typer.Argument(..., help='Files to upload. '
                                                      'Folder upload is supported, but directories are destructured.')
 ):
+    """
+    Upload local files from host into ChRIS storage and then run pl-dircopy.
+    """
     chris_pipeline: Optional[Pipeline] = None
     if pipeline:
         chris_pipeline = get_pipeline(pipeline)
@@ -101,20 +129,15 @@ def upload(
     run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
 
 
-@app.command(help='Run a pipeline on an existing feed.')
-def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
-             target: str = typer.Option(..., help='Plugin instance ID or URL.')):
-    plugin_instance = client.get_plugin_instance(target)
-    chris_pipeline = get_pipeline(name)
-    run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
-
-
-@app.command(help='Download everything from a ChRIS url.')
+@app.command()
 def download(
         threads: int = typer.Option(4, '--threads', '-t', help='Number of concurrent downloads.'),
         url: str = typer.Argument(..., help='ChRIS files API resource URL'),
         destination: Path = typer.Argument(..., help='Location on host where to save downloaded files.')
 ):
+    """
+    Download everything from a ChRIS url.
+    """
     cube_download(client=client, url=url, destination=destination, threads=threads)
 
 

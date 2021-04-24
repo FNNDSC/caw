@@ -12,6 +12,7 @@ A command-line client for _ChRIS_ for pipeline execution and data maangement.
 
 ```shell
 pip install -U caw
+caw --install-completion
 ```
 
 ### Usage

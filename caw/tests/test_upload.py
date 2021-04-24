@@ -4,7 +4,7 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 
 from chrisclient2.chrisclient import ChrisClient
-from caw.upload import upload
+from caw.movedata import upload
 
 
 example_data1 = r"""
