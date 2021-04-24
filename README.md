@@ -105,8 +105,7 @@ $ caw upload something.txt picture.jpg
 $ caw upload data/
 
 # create a feed with a title and description
-$ caw upload --name 'Caw caw, ima parrot' \
-    --description 'Parrots are tropical birds which are common pets.' \
+$ caw upload --name 'Caw caw, ima crow' --description 'A murder of crows' \
     something.txt picture.jpg
 
 # create a feed and run a pipeline after the pl-dircopy instance
