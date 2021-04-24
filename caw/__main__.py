@@ -9,7 +9,7 @@ from typing import Optional, List
 import logging
 from pathlib import Path
 
-from caw.upload import upload as cube_upload
+from caw.movedata import upload as cube_upload, download as cube_download
 
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -66,8 +66,7 @@ def run_pipeline(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
             pass
 
 
-@app.command(help='Upload files into ChRIS storage and then run pl-dircopy, '
-                  'printing the URL for the newly created plugin instance.')
+@app.command(help='Upload local files from host into ChRIS storage and then run pl-dircopy.')
 def upload(
         threads: int = typer.Option(4, '--threads', '-t', help='Number of threads to use for file upload.'),
         create_feed: bool = typer.Option(True, help='Run pl-dircopy on the newly uploaded files.'),
@@ -104,10 +103,19 @@ def upload(
 
 @app.command(help='Run a pipeline on an existing feed.')
 def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
-             target: str = typer.Option('', help='Plugin instance ID or URL.')):
+             target: str = typer.Option(..., help='Plugin instance ID or URL.')):
     plugin_instance = client.get_plugin_instance(target)
     chris_pipeline = get_pipeline(name)
     run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
+
+
+@app.command(help='Download everything from a ChRIS url.')
+def download(
+        threads: int = typer.Option(4, '--threads', '-t', help='Number of concurrent downloads.'),
+        url: str = typer.Argument(..., help='ChRIS files API resource URL'),
+        destination: Path = typer.Argument(..., help='Location on host where to save downloaded files.')
+):
+    cube_download(client=client, url=url, destination=destination, threads=threads)
 
 
 if __name__ == '__main__':

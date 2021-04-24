@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/caw)](https://pypi.org/project/caw/)
 [![License - MIT](https://img.shields.io/pypi/l/caw)](https://github.com/FNNDSC/caw/blob/master/LICENSE)
 
-A command-line client for _ChRIS_ supporting execution of pipelines.
+A command-line client for _ChRIS_ for pipeline execution and data maangement.
 
 ## Installation
 
@@ -33,7 +33,7 @@ singularity exec docker://fnndsc/caw:latest caw upload ./data
 
 ### Logging In
 
-ChRIS user account credentials can be passed via command-line arguments or environment variables.
+_ChRIS_ user account credentials can be passed via command-line arguments or environment variables.
 It's safer to use environment variables (so that your password isn't saved to history)
 and also easier (no need to retype it out everytime).
 
@@ -51,74 +51,95 @@ export CHRIS_PASSWORD=notchris1234
 
 caw search
 ```
+
 ### Commands
 
-* `pipeline`: Run a pipeline on an existing feed.
-* `search`: Search for pipelines that are saved in ChRIS.
-* `upload`: Upload files into ChRIS storage and then run...
-* `version`: Print version.
+- `search`:   Search for pipelines that are saved in _ChRIS_.
+- `pipeline`: Run a pipeline on an existing feed.
+- `upload`:   Upload files into _ChRIS_ storage and run [`pl-dircopy`](https://chrisstore.co/plugin/25).
+- `download`: Download everything from a _ChRIS_ url.
+
+#### `caw search`
+
+Search for pipelines that are saved in _ChRIS_.
+
+###### Examples
+
+```shell
+# list all pipellines
+$ caw search
+https://cube.chrisproject.org/api/v1/pipelines/1/           Automatic Fetal Brain Reconstruction Pipeline
+https://cube.chrisproject.org/api/v1/pipelines/2/           Infant FreeSurfer with Cerebellum Step
+https://cube.chrisproject.org/api/v1/pipelines/2/           COVID-Net Chest CT Analysis and Report
+
+# search for pipelines by name
+$ caw search 'Fetal Brain'
+https://cube.chrisproject.org/api/v1/pipelines/1/           Automatic Fetal Brain Reconstruction Pipeline
+```
 
 #### `caw pipeline`
 
 Run a pipeline on an existing feed.
 
-**Usage**:
+###### Examples
 
 ```shell
-$ caw pipeline [OPTIONS] NAME
+# specify source as a plugin instance ID
+$ caw pipeline --target 3 'Automatic Fetal Brain Reconstruction Pipeline'
+
+# specify source by URL
+$ caw pipeline --target https://cube.chrisproject.org/api/v1/plugins/instances/3/ 'Automatic Fetal Brain Reconstruction Pipeline'
 ```
-
-**Arguments**:
-
-* `NAME`: Name of pipeline to run.  [required]
-
-**Options**:
-
-* `--target TEXT`: Plugin instance ID or URL.  [default: ]
-* `--help`: Show this message and exit.
-
-#### `caw search`
-
-Search for pipelines that are saved in ChRIS.
-
-**Usage**:
-
-```shell
-$ caw search [OPTIONS] [NAME]
-```
-
-**Arguments**:
-
-* `[NAME]`: name of pipeline to search for  [default: ]
-
-**Options**:
-
-* `--help`: Show this message and exit.
 
 #### `caw upload`
 
-Upload files into ChRIS storage and then run pl-dircopy, printing the URL for the newly created plugin instance.
+Upload files into _ChRIS_ storage and then run pl-dircopy, printing the URL for the newly created plugin instance.
 
-**Usage**:
+###### Examples
 
 ```shell
-$ caw upload [OPTIONS] FILES...
+# upload files and create a new feed by running pl-dircopy
+$ caw upload something.txt picture.jpg
+
+# upload a folder and create a new feed by running pl-dircopy
+$ caw upload data/
+
+# create a feed with a title and description
+$ caw upload --name 'Caw caw, ima parrot' \
+    --description 'Parrots are tropical birds which are common pets.' \
+    something.txt picture.jpg
+
+# create a feed and run a pipeline after the pl-dircopy instance
+$ caw upload --name 'In-utero study' \
+    --pipeline 'Automatic Fetal Brain Reconstruction Pipeline' \
+    data/T2_*.nii
 ```
 
-**Arguments**:
+#### `caw download`
 
-* `FILES...`: Files to upload. Folder upload is supported, but directories are destructured.  [required]
+Download files from _ChRIS_.
 
-**Options**:
+```bash
+# download everything from a feed
+$ caw download 'https://cube.chrisproject.org/api/v1/3/files/' results/
 
-* `-t, --threads INTEGER`: Number of threads to use for file upload.  [default: 4]
-* `--create-feed / --no-create-feed`: Run pl-dircopy on the newly uploaded files.  [default: True]
-* `-n, --name TEXT`: Name of the feed.  [default: ]
-* `-d, --description TEXT`: Description of the feed.  [default: ]
-* `-p, --pipeline TEXT`: Name of pipeline to run on the data.  [default: ]
-* `--help`: Show this message and exit.
+# download the output directory of a specific plugin instance
+$ caw download 'https://cube.chrisproject.org/api/v1/plugins/instances/5/files/' results/
 
+# download everything from a path 'chris/uploads/test'
+$ caw download 'https://cube.chrisproject.org/api/v1/uploadedfiles/search/?fname=chris%2Fuploads%2Ftest' results/
 
+# example results
+$ tree results/
+wow
+└── uploads
+    └── test
+        ├── a.txt
+        ├── b.txt
+        ├── c.txt
+        ├── d.txt
+        └── e.txt
+```
 
 ## Development
 
@@ -142,11 +163,4 @@ Run all tests using the command
 
 ```shell
 python -m unittest
-```
-
-To generate (Markdown) documentation:
-
-```shell
-pip install typer-cli
-typer caw.__main__ utils docs --name caw
 ```

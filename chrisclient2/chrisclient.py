@@ -145,6 +145,9 @@ class ChrisClient:
         }
         qs = '&'.join([f'{k}={v}' for k, v in query.items() if v])
         url = f"{self.collection_links['uploadedfiles']}search/?{qs}"
+        return self.get_uploadedfiles(url)
+
+    def get_uploadedfiles(self, url: str) -> UploadedFiles:
         return UploadedFiles(url=url, session=self._s)
 
     def search_pipelines(self, name='') -> Set[Pipeline]:
