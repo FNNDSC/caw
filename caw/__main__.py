@@ -3,7 +3,8 @@ from importlib.metadata import metadata
 
 import requests.exceptions
 import typer
-from chrisclient2.chrisclient import ChrisClient, PipelineNotFoundError, run_pipeline_generator
+from chrisclient2.chrisclient import ChrisClient, ChrisIncorrectLoginError, \
+    PipelineNotFoundError, run_pipeline_generator
 from chrisclient2.models import Pipeline, PluginInstance
 from typing import Optional, List
 import logging
@@ -22,10 +23,12 @@ app = typer.Typer(
 )
 
 
-def show_version():
+def show_version(value: bool):
     """
     Print version.
     """
+    if not value:
+        return
     program_info = metadata(__package__)
     typer.echo(program_info['version'])
     raise typer.Exit()
@@ -49,7 +52,10 @@ def main(
     global client
     try:
         client = ChrisClient(address, username, password)
-    except requests.exceptions.RequestException:
+    except ChrisIncorrectLoginError as e:
+        typer.secho(e.args[0])
+        raise typer.Abort()
+    except Exception:
         typer.secho('Connection error\n'
                     f'address:  {address}\n'
                     f'username: {username}', fg=typer.colors.RED, err=True)

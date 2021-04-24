@@ -5,7 +5,15 @@ from typing import Optional, Set, Union
 from chrisclient2.models import PluginInstance, Plugin, Pipeline, UploadedFiles
 
 
-class ChrisResourceNotFoundError(Exception):
+class ChrisClientError(Exception):
+    pass
+
+
+class ChrisIncorrectLoginError(ChrisClientError):
+    pass
+
+
+class ChrisResourceNotFoundError(ChrisClientError):
     pass
 
 
@@ -34,7 +42,15 @@ def run_pipeline_generator(pipeline: Pipeline, plugin_instance: PluginInstance):
 
 
 class ChrisClient:
-    def __init__(self, address: str, username: str, password: str):
+    def __init__(self, address: str, username: Optional[str] = None, password: Optional[str] = None,
+                 token: Optional[str] = None):
+        """
+        Log into ChRIS.
+        :param address: CUBE address
+        :param username: account username
+        :param password: account password
+        :param token: use token authorization, takes priority over basic authorization
+        """
         if not address.endswith('/api/v1/'):
             raise ValueError('Address of CUBE must end with "/api/v1/"')
         self.addr = address
@@ -43,15 +59,39 @@ class ChrisClient:
         self.search_addr_pipelines = address + 'pipelins/search/'
 
         self._s = requests.Session()
-        self._s.auth = (username, password)
+        self._s.headers.update({'Accept': 'application/json'})
+
+        if not token:
+            if not username or not password:
+                raise ChrisIncorrectLoginError('Username and password are required.')
+
+            auth_url = self.addr + 'auth-token/'
+            login = self._s.post(auth_url, json={
+                'username': username,
+                'password': password
+            })
+            if login.status_code == 400:
+                res = login.json()
+                raise ChrisIncorrectLoginError(res['non_field_errors'] if 'non_field_errors' in res else login.text)
+            login.raise_for_status()
+            token = login.json()['token']
+
         self._s.headers.update({
-            'Accept': 'application/json',
             'Content-Type': 'application/vnd.collection+json',
+            'Authorization': 'Token ' + token
         })
 
-        res = self._s.get(address).json()
-        self.collection_links = res['collection_links']
-        assert self.collection_links['uploadedfiles']
+        res = self._s.get(address)
+        if res.status_code == 401:
+            data = res.json()
+            raise ChrisIncorrectLoginError(data['detail'] if 'detail' in data else res.text)
+        if res.status_code != 200:
+            raise ChrisClientError(f'CUBE response status code was {res.status_code}.')
+        res.raise_for_status()
+        data = res.json()
+        if 'collection_links' not in data or 'uploadedfiles' not in data['collection_links']:
+            raise ChrisClientError(f'Unexpected CUBE response: {res.text}')
+        self.collection_links = data['collection_links']
 
     def upload(self, file_path: str, upload_folder: str):
         """
