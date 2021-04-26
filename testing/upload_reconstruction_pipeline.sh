@@ -15,7 +15,7 @@ payload="$(
 cat << EOF
 {"template":
   {"data":[{"name":"name","value":"Automatic Fetal Brain Reconstruction Pipeline"},
-  {"name": "authors", "value": "Jennings Zhang <Jennings.Zhang@childrens.harvard.edu"},
+  {"name": "authors", "value": "Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"},
   {"name": "Category", "value": "MRI"},
   {"name": "description", "value":
   "Automatic fetal brain reconstruction pipeline developed by Kiho's group at the FNNDSC. Features machine-learning based brain masking and quality assessment."},
