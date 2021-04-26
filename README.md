@@ -8,6 +8,8 @@ A command-line client for _ChRIS_ for pipeline execution and data maangement.
 
 ## Installation
 
+The easiest option is via `pip`.
+
 ### Pip
 
 ```shell
@@ -15,22 +17,46 @@ pip install -U caw
 caw --install-completion
 ```
 
+Alternatively, container images are also provided. See [below](#container-usage).
+
 ### Usage
 
 ```shell
 caw [OPTIONS] COMMAND [ARGS]...
 ```
 
-Container usage is also supported.
+#### Container Usage
 
+A Docker image is also provided. Podman and Docker work equally well.
 
 ```shell
 docker run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
 podman run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
+```
+
+Constainer isolation can make usage finicky.
+Volumes must be mounted for the container to read data which exists on the host filesystem.
+If the _ChRIS_ backend is on a private network, the `--net=host` option might be necessary to resolve
+the server's hostname.
+
+Alternatively, [Singularity](https://en.wikipedia.org/wiki/Singularity_(software))
+is much easier to use because of its weaker container isolation and `$HOME` is a bind path by default.
+
+```shell
 singularity exec docker://fnndsc/caw:latest caw upload ./data
 ```
 
 ## Documentation
+
+Details are provided by the `--help` commaand.
+
+```shell
+caw --help
+caw search --help
+caw pipeline --help
+caw download --help
+caw upload --help
+```
 
 ### Logging In
 
