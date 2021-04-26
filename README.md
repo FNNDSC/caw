@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/caw)](https://pypi.org/project/caw/)
 [![License - MIT](https://img.shields.io/pypi/l/caw)](https://github.com/FNNDSC/caw/blob/master/LICENSE)
 
-A command-line client for _ChRIS_ for pipeline execution and data maangement.
+A command-line client for _ChRIS_ for pipeline execution and data mangement.
 
 ## Installation
 
