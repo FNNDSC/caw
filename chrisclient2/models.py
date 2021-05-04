@@ -58,6 +58,22 @@ class PluginInstance(ConnectedResource):
     def get_feed(self):
         return Feed(feed_url=self.feed, session=self._s)
 
+    def append_pipeline(self, pipeline: 'Pipeline'):
+        """
+        Run a pipeline as a generator of plugin instances. Every ``next()`` creates a plugin instance.
+        :param pipeline: pipeline to run
+        """
+        plugin_instance = self
+        for p in pipeline:
+            params = {
+                'previous_id': plugin_instance.id
+            }
+            params.update(p.default_parameters)
+            next_instance = p.plugin.create_instance(params)
+            yield next_instance
+            plugin_instance = next_instance
+
+
 
 class Plugin(ConnectedResource):
     def __init__(self, id: int, name: str, version: str,

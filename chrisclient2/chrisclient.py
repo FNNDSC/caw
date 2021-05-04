@@ -25,22 +25,6 @@ class PipelineNotFoundError(ChrisResourceNotFoundError):
     pass
 
 
-def run_pipeline_generator(pipeline: Pipeline, plugin_instance: PluginInstance):
-    """
-    Run a pipeline as a plugin instance generator. Every next() creates a plugin instance.
-    :param pipeline: pipeline to run
-    :param plugin_instance: plugin instance from which to start the pipeline
-    """
-    for p in pipeline:
-        params = {
-            'previous_id': plugin_instance.id
-        }
-        params.update(p.default_parameters)
-        next_instance = p.plugin.create_instance(params)
-        yield next_instance
-        plugin_instance = next_instance
-
-
 class ChrisClient:
     def __init__(self, address: str, username: Optional[str] = None, password: Optional[str] = None,
                  token: Optional[str] = None):

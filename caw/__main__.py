@@ -80,7 +80,7 @@ def get_pipeline(name: str) -> Pipeline:
 
 
 def run_pipeline(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
-    with typer.progressbar(run_pipeline_generator(pipeline=chris_pipeline, plugin_instance=plugin_instance),
+    with typer.progressbar(plugin_instance.append_pipeline(chris_pipeline),
                            length=len(chris_pipeline.pipings), label='Scheduling pipeline') as proto_pipeline:
         for _ in proto_pipeline:
             pass
