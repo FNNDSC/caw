@@ -1,6 +1,6 @@
 from unittest import TestCase
-import chrisclient2.models
-from chrisclient2.chrisclient import ChrisClient
+import chris.models
+from chris.client import ChrisClient
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 import os
 
@@ -47,7 +47,7 @@ class TestChrisClient(TestCase):
                          'Queue size does not match number of nodes in pipeline.')
 
     def test_files_pagination(self):
-        chrisclient2.models.PAGINATION_LIMIT = 5
+        chris.models.PAGINATION_LIMIT = 5
         # import logging
         # logging.basicConfig(level=logging.DEBUG)
         with TemporaryDirectory() as td:
@@ -66,7 +66,7 @@ class TestChrisClient(TestCase):
                 if counter > 20:
                     self.fail('More than 20 example files from pagination, infinite loop detected.')
         self.assertEqual(len(uploaded_files), counter)
-        chrisclient2.models.PAGINATION_LIMIT = 64
+        chris.models.PAGINATION_LIMIT = 64
 
     def test_download(self):
         sample_text = 'No skis take rocks like rental skis!'

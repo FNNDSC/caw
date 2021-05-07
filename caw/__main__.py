@@ -3,9 +3,8 @@ from importlib.metadata import metadata
 
 import requests.exceptions
 import typer
-from chrisclient2.chrisclient import ChrisClient, ChrisIncorrectLoginError, \
-    PipelineNotFoundError, run_pipeline_generator
-from chrisclient2.models import Pipeline, PluginInstance
+from chris.client import ChrisClient, ChrisIncorrectLoginError, PipelineNotFoundError
+from chris.models import Pipeline, PluginInstance
 from typing import Optional, List
 import logging
 from pathlib import Path

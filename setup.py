@@ -8,7 +8,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 setup(
     name='caw',
     version='0.1.0',
-    packages=['caw', 'chrisclient2'],
+    packages=['caw', 'chris'],
     url='https://github.com/FNNDSC/caw',
     license='MIT',
     author='Jennings Zhang',

@@ -2,7 +2,7 @@ from os import path
 import requests
 from typing import Optional, Set, Union
 
-from chrisclient2.models import PluginInstance, Plugin, Pipeline, UploadedFiles
+from chris.models import PluginInstance, Plugin, Pipeline, UploadedFiles
 
 
 class ChrisClientError(Exception):

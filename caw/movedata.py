@@ -3,8 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 import datetime
 from typing import List, Tuple
 import typer
-from chrisclient2.chrisclient import ChrisClient
-from chrisclient2.models import UploadedFile
+from chris.client import ChrisClient
+from chris.models import UploadedFile
 import logging
 from pathlib import Path
 

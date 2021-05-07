@@ -1,7 +1,7 @@
 import os
 import requests
 from datetime import datetime
-from chrisclient2.util import collection_helper, PaginationNotImplementedException
+from chris.util import collection_helper, PaginationNotImplementedException
 from typing import Optional, Set, Union, Iterator
 from collections.abc import Iterable
 from pathlib import Path
@@ -250,7 +250,8 @@ class Pipeline(ConnectedResource):
 
 class UploadedFile(ConnectedResource):
     def __init__(self, creation_date: str, file_resource: str, fname: str, fsize: int, id: int,
-                 owner: str, url: str, session: requests.Session,
+                 url: str, session: requests.Session,
+                 owner: Optional[str] = None,
                  feed_id: Optional[int] = None, plugin_inst: Optional[str] = None,
                  plugin_inst_id: Optional[int] = None):
         super().__init__(url, session)
@@ -282,6 +283,7 @@ class UploadedFiles(ConnectedResource, Iterable):
         super().__init__(url, session)
         if 'limit=' not in self.url:
             self.url += f"{'&' if '?' in self.url else '?'}limit={PAGINATION_LIMIT}"
+        # TODO invalid URL exception
         self._initial_data = self._do_get(self.url)
 
     def __iter__(self) -> Iterator[UploadedFile]:

@@ -3,7 +3,7 @@ import unittest
 from tempfile import NamedTemporaryFile
 from pathlib import Path
 
-from chrisclient2.chrisclient import ChrisClient
+from chris.client import ChrisClient
 from caw.movedata import upload
 
 
