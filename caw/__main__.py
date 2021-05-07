@@ -4,7 +4,7 @@ from importlib.metadata import metadata
 import requests.exceptions
 import typer
 from chris.client import ChrisClient, ChrisIncorrectLoginError, PipelineNotFoundError
-from chris.models import Pipeline, PluginInstance
+from chris.models import Pipeline, PluginInstance, InvalidFilesResourceUrlException
 from typing import Optional, List
 import logging
 from pathlib import Path
@@ -143,7 +143,11 @@ def download(
     """
     Download everything from a ChRIS url.
     """
-    cube_download(client=client, url=url, destination=destination, threads=threads)
+    try:
+        cube_download(client=client, url=url, destination=destination, threads=threads)
+    except InvalidFilesResourceUrlException as e:
+        typer.secho(str(e), fg=typer.colors.RED, err=True)
+        raise typer.Abort()
 
 
 if __name__ == '__main__':

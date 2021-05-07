@@ -273,6 +273,10 @@ class UploadedFile(ConnectedResource):
                     f.write(chunk)
 
 
+class InvalidFilesResourceUrlException(Exception):
+    pass
+
+
 class UploadedFiles(ConnectedResource, Iterable):
     """
     Lazy iterable over paginated response.
@@ -283,8 +287,19 @@ class UploadedFiles(ConnectedResource, Iterable):
         super().__init__(url, session)
         if 'limit=' not in self.url:
             self.url += f"{'&' if '?' in self.url else '?'}limit={PAGINATION_LIMIT}"
-        # TODO invalid URL exception
-        self._initial_data = self._do_get(self.url)
+
+        try:
+            self._initial_data = self._do_get(self.url)
+        except requests.exceptions.HTTPError as e:
+            raise InvalidFilesResourceUrlException(f'{e.response.status_code} error getting {self.url}')
+        # check given URL is a files collection resource
+        if 'count' not in self._initial_data:
+            raise InvalidFilesResourceUrlException(f'{self.url} does not look like a files collection resource.')
+        if self._initial_data['count'] > 0:
+            try:
+                UploadedFile(session=self._s, **self._initial_data['results'][0])
+            except KeyError:
+                raise InvalidFilesResourceUrlException(f'{self.url} is not a files collection resource.')
 
     def __iter__(self) -> Iterator[UploadedFile]:
         data = self._initial_data  # first page
