@@ -3,79 +3,23 @@ from importlib.metadata import metadata
 
 import requests.exceptions
 import typer
-from chris.client import ChrisClient, ChrisIncorrectLoginError, PipelineNotFoundError
-from chris.models import Pipeline, PluginInstance, InvalidFilesResourceUrlException
+from chris.models import Pipeline, InvalidFilesResourceUrlException
 from typing import Optional, List
 import logging
 from pathlib import Path
 
 from caw.movedata import upload as cube_upload, download as cube_download
-from caw.login import LoginManager, NotLoggedInError
-
+from caw.login import LoginManager
+from caw.globals import DEFAULT_ADDRESS, DEFAULT_USERNAME, DEFAULT_PASSWORD
+from caw.helpers import ClientPrecursor, run_pipeline
 
 if 'CAW_DEBUG' in os.environ:
     logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_ADDRESS = 'http://localhost:8000/api/v1/'
-DEFAULT_USERNAME = 'chris'
-DEFAULT_PASSWORD = 'chris1234'
-
 login_manager = LoginManager()
-
-
-class ClientPrecursor:
-    """
-    A workaround so that the ChrisClient object's constructor, which attempts to use the login
-    credentials, is called by the subcommand instead of the main callback.
-
-    This is necessary to support the ``caw login`` subcommand.
-    """
-    def __init__(self):
-        self.address = None
-        self.username = None
-        self.password = None
-        self.token = None
-
-    def __call__(self) -> ChrisClient:
-        """
-        Authenticate with ChRIS and construct the client object.
-
-        Login strategy:
-        1. First, use given credentials.
-        2. If credentials not specified, use saved login.
-
-        :return: client object
-        """
-        if not self.address:
-            raise ValueError('Must specify CUBE address.')
-
-        if self.password == DEFAULT_PASSWORD:  # assume default options are being used
-            try:
-                self.token = login_manager.get() if self.address == DEFAULT_ADDRESS else login_manager.get(self.address)
-            except NotLoggedInError:
-                if 'CHRIS_TESTING' not in os.environ:
-                    typer.secho('Using defaults (set CHRIS_TESTING=y to suppress this message): '
-                                f'{self.address}  {self.username}:{self.password}', dim=True, err=True)
-
-        try:
-            if self.token:
-                logger.debug('HTTP token: "%s"', self.token)
-                return ChrisClient(self.address, token=self.token)
-            else:
-                return ChrisClient(self.address, username=self.username, password=self.password)
-        except ChrisIncorrectLoginError as e:
-            typer.secho(e.args[0], err=True)
-            raise typer.Abort()
-        except Exception:
-            typer.secho('Connection error\n'
-                        f'address:  {self.address}\n'
-                        f'username: {self.username}', fg=typer.colors.RED, err=True)
-            raise typer.Abort()
-
-
-precursor = ClientPrecursor()
+precursor = ClientPrecursor(login_manager)
 
 app = typer.Typer(
     epilog='Examples and documentation at '
@@ -112,11 +56,6 @@ def main(
     precursor.password = password
 
 
-####################
-# LOGIN COMMANDS
-####################
-
-
 @app.command()
 def login():
     """
@@ -142,48 +81,14 @@ def logout():
         login_manager.logout(precursor.address)
 
 
-####################
-# HELPER FUNCTIONS
-####################
-
-
-def find_pipeline(client: ChrisClient, name: str) -> Pipeline:
-    """
-    Helper to call ``client.get_pipeline(name)`` within a try/except block.
-    :param client:
-    :param name:
-    :return:
-    """
-    try:
-        return client.get_pipeline(name)
-    except PipelineNotFoundError:
-        typer.secho(f'Pipeline not found: "{pipeline}"', fg=typer.colors.RED, err=True)
-        raise typer.Abort()
-
-
-def run_pipeline(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
-    """
-    Helper to execute a pipeline with a progress bar.
-    """
-    with typer.progressbar(plugin_instance.append_pipeline(chris_pipeline),
-                           length=len(chris_pipeline.pipings), label='Scheduling pipeline') as proto_pipeline:
-        for _ in proto_pipeline:
-            pass
-
-
-####################
-# ACTION COMMANDS
-####################
-
-
 @app.command()
 def search(name: str = typer.Argument('', help='name of pipeline to search for')):
     """
     Search for pipelines that are saved in ChRIS.
     """
     client = precursor()
-    for pipeline in client.search_pipelines(name):
-        typer.echo(f'{pipeline.url:<60}{typer.style(pipeline.name, bold=True)}')
+    for search_result in client.search_pipelines(name):
+        typer.echo(f'{search_result.url:<60}{typer.style(search_result.name, bold=True)}')
 
 
 @app.command()
@@ -194,7 +99,7 @@ def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
     """
     client = precursor()
     plugin_instance = client.get_plugin_instance(target)
-    chris_pipeline = find_pipeline(client, name)
+    chris_pipeline = client.get_pipeline(name)
     run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
 
 
@@ -214,7 +119,7 @@ def upload(
     client = precursor()
     chris_pipeline: Optional[Pipeline] = None
     if pipeline_name:
-        chris_pipeline = find_pipeline(client, pipeline_name)
+        chris_pipeline = client.get_pipeline(pipeline_name)
 
     try:
         swift_path = cube_upload(client=client, files=files, upload_threads=threads)

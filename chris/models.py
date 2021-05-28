@@ -74,7 +74,6 @@ class PluginInstance(ConnectedResource):
             plugin_instance = next_instance
 
 
-
 class Plugin(ConnectedResource):
     def __init__(self, id: int, name: str, version: str,
                  instances: str, url: str, session: requests.Session, **kwargs):
