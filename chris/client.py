@@ -56,7 +56,7 @@ class ChrisClient:
             })
             if login.status_code == 400:
                 res = login.json()
-                raise ChrisIncorrectLoginError(res['non_field_errors'] if 'non_field_errors' in res else login.text)
+                raise ChrisIncorrectLoginError(res['non_field_errors'][0] if 'non_field_errors' in res else login.text)
             login.raise_for_status()
             token = login.json()['token']
 
@@ -64,6 +64,10 @@ class ChrisClient:
             'Content-Type': 'application/vnd.collection+json',
             'Authorization': 'Token ' + token
         })
+        self.token = token
+        """
+        HTTP basic authentication token.
+        """
 
         res = self._s.get(address)
         if res.status_code == 401:
@@ -76,6 +80,14 @@ class ChrisClient:
         if 'collection_links' not in data or 'uploadedfiles' not in data['collection_links']:
             raise ChrisClientError(f'Unexpected CUBE response: {res.text}')
         self.collection_links = data['collection_links']
+
+        res = self._s.get(self.collection_links['user'])
+        res.raise_for_status()
+        data = res.json()
+        self.username = data['username']
+        """
+        The ChRIS user's username.
+        """
 
     def upload(self, file_path: str, upload_folder: str):
         """

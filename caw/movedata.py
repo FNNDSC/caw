@@ -12,9 +12,9 @@ from pathlib import Path
 def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_threads=4):
 
     if parent_folder:
-        upload_folder = f'chris/uploads/{parent_folder}/{datetime.datetime.now().isoformat()}/'
+        upload_folder = f'{client.username}/uploads/{parent_folder}/{datetime.datetime.now().isoformat()}/'
     else:
-        upload_folder = f'chris/uploads/{datetime.datetime.now().isoformat()}/'
+        upload_folder = f'{client.username}/uploads/{datetime.datetime.now().isoformat()}/'
 
     input_files = []
     for mri in files:

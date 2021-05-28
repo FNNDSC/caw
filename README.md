@@ -14,7 +14,11 @@ The easiest option is via `pip`.
 
 ```shell
 pip install -U caw
+
+# optional, for tab completion of subcommands
 caw --install-completion
+# optional, for secure password storage
+pip install keyring
 ```
 
 Alternatively, container images are also provided. See [below](#container-usage).
