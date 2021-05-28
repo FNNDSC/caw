@@ -64,20 +64,30 @@ caw upload --help
 
 ### Logging In
 
-_ChRIS_ user account credentials can be passed via command-line arguments or environment variables.
+Multiple ways of providing your credentials are supported. The most secure way is to
+install the optional dependency [`keyring`](https://pypi.org/project/keyring/)
+and run `caw login`.
+
+```shell
+# install optional dependency
+pip install keyring
+caw --address https://cube.chrisproject.org/api/v1/ --username 'a_crow' login
+```
+
+Alternatively, _ChRIS_ user account credentials can be passed via command-line arguments or environment variables.
 It's safer to use environment variables (so that your password isn't saved to history)
 and also easier (no need to retype it out everytime).
 
 ```shell
 # using cli arguments
 caw --address https://cube.chrisproject.org/api/v1/ \
-    --username chrisy        \
+    --username 'a_crow'      \
     --password notchris1234  \
     search
 
 # using environment variables
 export CHRIS_URL=https://cube.chrisproject.org/api/v1/
-export CHRIS_USERNAME=chrisy
+export CHRIS_USERNAME=a_crow
 export CHRIS_PASSWORD=notchris1234
 
 caw search
@@ -181,9 +191,10 @@ pip install -e .
 
 ### Testing
 
-You must set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
-(say, using [_miniChRIS_](https://github.com/FNNDSC/miniChRIS))
-and install the pipeline https://chrisstore.co/api/v1/pipelines/1/
+First, set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
+(say, using [_miniChRIS_](https://github.com/FNNDSC/miniChRIS)).
+
+Next, install the example pipeline.
 
 ```shell
 ./testing/upload_reconstruction_pipeline.sh
@@ -193,4 +204,13 @@ Run all tests using the command
 
 ```shell
 python -m unittest
+```
+
+The end-to-end test is disabled by default because it will create a _ChRIS_ account and
+affect `caw` user settings. It is recommended to run it in a container instead.
+
+```shell
+docker build -t caw .
+docker run --rm --net=host --userns=host \
+       -e CAW_TEST_E2E=y caw python -m unittest caw.tests.test_e2e
 ```

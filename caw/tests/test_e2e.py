@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import random
@@ -58,6 +59,7 @@ class TestEndToEnd(unittest.TestCase):
     def setUpClass(cls):
         create_account()
 
+    @unittest.skipUnless('CAW_TEST_E2E' in os.environ, 'Set CAW_TEST_E2E=y to run end-to-end tests.')
     def test_endtoend(self):
         sp.run(['caw', '--address', address, '--username', username, 'login'],
                input=(password + '\n'), text=True, check=True)
