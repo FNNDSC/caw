@@ -63,15 +63,22 @@ class PluginInstance(ConnectedResource):
         Run a pipeline as a generator of plugin instances. Every ``next()`` creates a plugin instance.
         :param pipeline: pipeline to run
         """
-        plugin_instance = self
+
+        instances_map = {
+            'None': self.id
+        }
+        """
+        Maps Piping IDs to newly created PluginInstance IDs.
+        """
+
         for p in pipeline:
             params = {
-                'previous_id': plugin_instance.id
+                'previous_id': instances_map[str(p.previous_id)]
             }
             params.update(p.default_parameters)
             next_instance = p.plugin.create_instance(params)
             yield next_instance
-            plugin_instance = next_instance
+            instances_map[str(p.id)] = next_instance.id
 
 
 class Plugin(ConnectedResource):
@@ -93,7 +100,9 @@ class Plugin(ConnectedResource):
 
 class Piping(Iterable):
     """
-    A node of a directed acyclic graph representation of a pipeline.
+    A Piping is the information about a plugin's membership of a pipeline.
+    It is a node of a directed acyclic graph representation of a pipeline.
+    Edges are bidirectional. A Piping knows its parent and its children.
     """
 
     def __init__(self, id: int, pipeline: str, pipeline_id: int, plugin: str, plugin_id: int, url: str,
