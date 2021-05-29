@@ -137,10 +137,9 @@ def upload(
     if description:
         dircopy_instance.get_feed().set_description(description)
 
-    if not chris_pipeline:
-        typer.echo(dircopy_instance.url)
-        raise typer.Exit()
-    run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
+    if chris_pipeline:
+        run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
+    typer.echo(dircopy_instance.feed)
 
 
 @app.command()
