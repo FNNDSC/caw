@@ -1,10 +1,13 @@
 #!/bin/bash -e
 
+CUBE_URL=${CUBE_URL:-http://localhost:8000/api/v1/}
+CHRIS_USER=${CUBE_USER:-chris:chris1234}
+
 plugins=(
   https://chrisstore.co/api/v1/plugins/71/
   https://chrisstore.co/api/v1/plugins/77/
   https://chrisstore.co/api/v1/plugins/81/
-  https://chrisstore.co/api/v1/plugins/82/
+  https://chrisstore.co/api/v1/plugins/89/
 )
 
 for url in "${plugins[@]}"; do
@@ -25,12 +28,12 @@ cat << EOF
     {\"plugin_name\":\"pl-ants_n4biasfieldcorrection\"   ,\"plugin_version\":\"0.2.7.1\"  ,\"previous_index\":0,
       \"plugin_parameter_defaults\":[{\"name\":\"inputPathFilter\",\"default\":\"extracted/0.0/*.nii\"}]},
     {\"plugin_name\":\"pl-fetal-brain-assessment\"       ,\"plugin_version\":\"1.3.0\"   ,\"previous_index\":1},
-    {\"plugin_name\":\"pl-irtk-reconstruction\"          ,\"plugin_version\":\"1.0.1\"   ,\"previous_index\":2}
+    {\"plugin_name\":\"pl-irtk-reconstruction\"          ,\"plugin_version\":\"1.0.3\"   ,\"previous_index\":2}
   ]"}]}}
 EOF
 )"
 
-curl -u chris:chris1234 http://localhost:8000/api/v1/pipelines/ \
+curl -u "$CHRIS_USER" "${CUBE_URL}pipelines/" \
   -H 'Content-Type:application/vnd.collection+json' \
   -H 'Accept:application/vnd.collection+json' \
   --data "$(tr -d '\n' <<< "$payload")"

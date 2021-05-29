@@ -24,6 +24,8 @@ jobs:
       - name: Setup CUBE
         uses: FNNDSC/miniChRIS@v5
       - name: Prepare examples
-        run: testing/upload_reconstruction_pipeline.sh
+        run: |
+          examples/upload_reconstruction_pipeline.sh
+          examples/dummy_pipeline.sh
       - name: Run tests
         run: python -m unittest
