@@ -212,5 +212,5 @@ affect `caw` user settings. It is recommended to run it in a container instead.
 ```shell
 docker build -t caw .
 docker run --rm --net=host --userns=host \
-       -e CAW_TEST_E2E=y caw python -m unittest caw.tests.test_e2e
+       -e CAW_TEST_FULL=y caw python -m unittest caw.tests.test_e2e
 ```

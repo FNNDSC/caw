@@ -1,4 +1,5 @@
 import os
+import sys
 from importlib.metadata import metadata
 
 import requests.exceptions
@@ -57,13 +58,15 @@ def main(
 
 
 @app.command()
-def login():
+def login(read_pass: bool = typer.Option(False, '--password-stdin', help='Take the password from stdin')):
     """
     Login to ChRIS.
     """
     if precursor.username == DEFAULT_USERNAME:
         precursor.username = typer.prompt('username')
-    if precursor.password == DEFAULT_PASSWORD:
+    if read_pass:
+        precursor.password = ('\n'.join(sys.stdin)).rstrip('\n')
+    elif precursor.password == DEFAULT_PASSWORD:
         precursor.password = typer.prompt('password', hide_input=True)
 
     client = precursor()

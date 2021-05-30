@@ -28,4 +28,6 @@ jobs:
           examples/upload_reconstruction_pipeline.sh
           examples/dummy_pipeline.sh
       - name: Run tests
+        env:
+          CAW_TEST_FULL: y
         run: python -m unittest

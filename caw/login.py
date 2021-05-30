@@ -168,4 +168,4 @@ class LoginManager:
             typer.secho('For safer identification storage, please run: '
                         '\n\n\tcaw logout'
                         '\n\tpip install keyring'
-                        f'\n\tcaw login --address {address}',  dim=True, err=True)
+                        f'\n\tcaw login --address {address}\n',  dim=True, err=True)
