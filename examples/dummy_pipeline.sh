@@ -11,7 +11,7 @@ res=$(curl -su "$CHRIS_USER" \
 
 if [ "$(jq -r '.count' <<< "$res")" -lt 1 ]; then
   docker exec chris python plugins/services/manager.py register host \
-    --pluginurl https://chrisstore.co/api/v1/plugins/69/
+    --pluginurl https://chrisstore.co/api/v1/plugins/23/
 fi
 
 linear="$(
