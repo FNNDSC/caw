@@ -7,7 +7,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 # noinspection PyPackageRequirements
 setup(
     name='caw',
-    version='0.3.0',
+    version='0.3.1',
     packages=['caw', 'chris'],
     url='https://github.com/FNNDSC/caw',
     license='MIT',
