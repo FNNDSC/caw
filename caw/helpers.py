@@ -63,15 +63,23 @@ class ClientPrecursor:
         if not self.address:
             raise ValueError('Must specify CUBE address.')
 
-        if self.password == DEFAULT_PASSWORD:  # assume default options are being used
+        # check if previously logged in
+        if self.address == DEFAULT_ADDRESS:
+            saved_address = self.login_manager.get_default_address()
+            if saved_address:
+                self.address = saved_address
+        logger.debug('CUBE address: %s', self.address)
+
+        if self.password == DEFAULT_PASSWORD:  # assume password not specified
             try:
-                self.token = self.login_manager.get() if self.address == DEFAULT_ADDRESS \
-                    else self.login_manager.get(self.address)
-            except NotLoggedInError:
+                self.token = self.login_manager.get(self.address)
+            except NotLoggedInError:  # password not specified and not previously logged in
                 if 'CHRIS_TESTING' not in os.environ:
                     typer.secho('Using defaults (set CHRIS_TESTING=y to suppress this message): '
                                 f'{self.address}  {self.username}:{self.password}', dim=True, err=True)
 
+        # If previously logged in, use token to authenticate.
+        # Otherwise, use username and password combo (which may or may not be be the default chris:chris1234).
         try:
             if self.token:
                 logger.debug('HTTP token: "%s"', self.token)

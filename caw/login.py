@@ -122,6 +122,11 @@ class LoginManager:
         with self.__savefile.open('r') as f:
             self.__store = PreferredSecretStore(json.load(f))
 
+    def get_default_address(self) -> Optional[str]:
+        if 'defaultAddress' not in self.__store.context:
+            return None
+        return self.__store.context['defaultAddress']
+
     def __default_address(self, address: Optional[str] = None):
         """
         Get the default address from the configuration if the address was not given.
@@ -130,9 +135,10 @@ class LoginManager:
         """
         if address:
             return address
-        if 'defaultAddress' not in self.__store.context:
+        default_address = self.get_default_address()
+        if not default_address:
             raise NotLoggedInError('Default CUBE address has not yet been set.')
-        return self.__store.context['defaultAddress']
+        return default_address
 
     def __write_config(self):
         """
