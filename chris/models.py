@@ -257,11 +257,30 @@ class Pipeline(ConnectedResource):
 
 
 class UploadedFile(ConnectedResource):
+    """
+    Represents a file resource in CUBE.
+
+    TODO: rename to RegisteredFile
+    """
     def __init__(self, creation_date: str, file_resource: str, fname: str, fsize: int, id: int,
                  url: str, session: requests.Session,
                  owner: Optional[str] = None,
                  feed_id: Optional[int] = None, plugin_inst: Optional[str] = None,
-                 plugin_inst_id: Optional[int] = None):
+                 plugin_inst_id: Optional[int] = None,
+
+                 PatientID: Optional[str] = None,
+                 PatientName: Optional[str] = None,
+                 PatientBirthDate: Optional[str] = None,
+                 PatientAge: Optional[float] = None,  # float or int?
+                 PatientSex: Optional[str] = None,
+                 StudyDate: Optional[str] = None,
+                 Modality: Optional[str] = None,
+                 ProtocolName: Optional[str] = None,
+                 StudyInstanceUID: Optional[str] = None,
+                 StudyDescription: Optional[str] = None,
+                 SeriesInstanceUID: Optional[str] = None,
+                 SeriesDescription: Optional[str] = None,
+                 pacs_identifier: Optional[str] = None):
         super().__init__(url, session)
         self.creation_date = datetime.fromisoformat(creation_date)
         self.file_resource = file_resource
@@ -272,6 +291,20 @@ class UploadedFile(ConnectedResource):
         self.feed_id = feed_id
         self.plugin_inst = plugin_inst
         self.plugin_inst_id = plugin_inst_id
+
+        self.PatientID = PatientID
+        self.PatientName = PatientName
+        self.PatientBirthDate = PatientBirthDate
+        self.PatientAge: Optional[float] = PatientAge
+        self.PatientSex = PatientSex
+        self.StudyDate = StudyDate
+        self.Modality = Modality
+        self.ProtocolName = ProtocolName
+        self.StudyInstanceUID = StudyInstanceUID
+        self.StudyDescription = StudyDescription
+        self.SeriesInstanceUID = SeriesInstanceUID
+        self.SeriesDescription = SeriesDescription
+        self.pacs_identifier = pacs_identifier
 
     def download(self, destination: Union[Path, str], chunk_size=8192):
         with self._s.get(self.file_resource, stream=True, headers={'Accept': None}) as r:
