@@ -40,7 +40,7 @@ class ChrisClient:
         self.addr = address
         self.search_addr_plugins = address + 'plugins/search/'
         self.search_addr_plugins_instances = address + 'plugins/instances/search/'
-        self.search_addr_pipelines = address + 'pipelins/search/'
+        self.search_addr_pipelines = address + 'pipelines/search/'
 
         self._s = requests.Session()
         self._s.headers.update({'Accept': 'application/json'})
