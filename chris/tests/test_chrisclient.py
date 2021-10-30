@@ -18,9 +18,9 @@ class TestChrisClient(TestCase):
         self.assertEqual(plugin.name, 'pl-tsdircopy')
 
     def test_get_plugin_by_version(self):
-        plugin = self.client.get_plugin(name_exact='pl-dircopy', version='2.1.0')
+        plugin = self.client.get_plugin(name_exact='pl-dircopy', version='2.1.1')
         self.assertEqual(plugin.name, 'pl-dircopy')
-        self.assertEqual(plugin.version, '2.1.0')
+        self.assertEqual(plugin.version, '2.1.1')
 
     def test_get_plugin_by_url(self):
         plugin = self.client.get_plugin(url='http://localhost:8000/api/v1/plugins/2/')
