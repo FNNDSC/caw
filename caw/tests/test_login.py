@@ -1,50 +1,66 @@
 import unittest
-from unittest import TestCase, mock
+from unittest.mock import Mock
+
+import json
+from typing import Type, Union
 from pathlib import Path
-from caw.login import AbstractSecretStore, KeyringSecretStore, FallbackSecretStore,\
-    NotLoggedInError, LoginManager, use_keyring
+
+from caw.login.store import AbstractSecretStore, KeyringSecretStore, PlaintextSecretStore, use_keyring
+from caw.login.manager import LoginManager
+
 from tempfile import NamedTemporaryFile
 
 
-class TestSecretStore(TestCase):
+class TestSecretStore(unittest.TestCase):
     def can_save_clear(self, store: AbstractSecretStore):
         store.set('http://localhost:8910/api/v1/', 'abcdefg')
         stored = store.get('http://localhost:8910/api/v1/')
-        self.assertEqual(stored, 'abcdefg', msg='Stored secret does not match what was originally set.')
+        self.assertEqual(stored, 'abcdefg',
+                         msg='Stored secret does not match what was originally set.')
         store.clear('http://localhost:8910/api/v1/')
-        with self.assertRaises(NotLoggedInError, msg='Secret was not removed.'):
-            store.get('http://localhost:8910/api/v1/')
+        self.assertIsNone(store.get('http://localhost:8910/api/v1/'),
+                          msg='store.clear did not work.')
 
     @unittest.skipUnless(use_keyring, 'keyring not supported')
     def test_keyring(self):
         self.can_save_clear(KeyringSecretStore({}))
 
     def test_plaintext(self):
-        self.can_save_clear(FallbackSecretStore({}))
+        self.can_save_clear(PlaintextSecretStore({}))
 
 
-class TestLoginManager(TestCase):
-    def test_default_address(self):
-        store = FallbackSecretStore({})
+class TestLoginManager(unittest.TestCase):
 
-        with NamedTemporaryFile(suffix='.json', delete=True) as savefile:
+    def setUp(self) -> None:
+        with NamedTemporaryFile(suffix='.json', delete=True) as self.savefile:
             pass
+        self.savefile = Path(self.savefile.name)
+        self.store: Mock = Mock(spec=AbstractSecretStore)
+        wrapper = Mock(return_value=self.store, spec=AbstractSecretStore.__init__)
+        self.lm = LoginManager(wrapper, self.savefile)  # type: ignore
 
-        lm = LoginManager(lambda _: store, Path(savefile.name))
+    def getJson(self) -> dict:
+        """
+        Load the file written to by the ``LoginManager``.
+        """
+        with self.savefile.open('r') as f:
+            return json.load(f)
 
-        store.set = mock.Mock()
-        lm.login('https://example.com/api/v1/', 'berry')
-        store.set.assert_called_once_with('https://example.com/api/v1/', 'berry')
-        self.assertIn('defaultAddress', store.context,
+    def test_default_address(self):
+        self.lm.login('https://example.com/api/v1/', 'berry')
+        self.store.set.assert_called_once_with('https://example.com/api/v1/', 'berry')
+
+        content = self.getJson()
+        self.assertIn('defaultAddress', content,
                       msg='Login manager did not set the CUBE address as default.')
-        self.assertEqual(store.context['defaultAddress'], 'https://example.com/api/v1/',
+        self.assertEqual(content['defaultAddress'], 'https://example.com/api/v1/',
                          msg='Default address is incorrect.')
 
-        store.get = mock.Mock(return_value='berry')
-        self.assertEqual(lm.get(), 'berry', msg='Retrieved password for default CUBE address is incorrect.')
+        self.store.get = Mock(return_value='berry')
+        self.assertEqual(self.lm.get(), 'berry',
+                         msg='Retrieved password for default CUBE address is incorrect.')
 
-        store.clear = mock.Mock()
-        lm.logout()
-        store.clear.assert_called_once_with('https://example.com/api/v1/')
-        self.assertNotIn('defaultAddress', store.context,
+        self.lm.logout()
+        self.store.clear.assert_called_once_with('https://example.com/api/v1/')
+        self.assertNotIn('defaultAddress', self.getJson(),
                          msg='Default address not removed after logout.')

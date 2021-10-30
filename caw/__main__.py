@@ -1,6 +1,5 @@
 import os
 import sys
-from importlib.metadata import metadata
 
 import requests.exceptions
 import typer
@@ -9,8 +8,9 @@ from typing import Optional, List
 import logging
 from pathlib import Path
 
+import caw
 from caw.movedata import upload as cube_upload, download as cube_download
-from caw.login import LoginManager
+from caw.login.manager import LoginManager
 from caw.globals import DEFAULT_ADDRESS, DEFAULT_USERNAME, DEFAULT_PASSWORD
 from caw.helpers import ClientPrecursor, run_pipeline
 
@@ -34,11 +34,11 @@ def show_version(value: bool):
     """
     if not value:
         return
-    program_info = metadata(__package__)
-    typer.echo(program_info['version'])
+    typer.echo(f'{caw.__pkg.metadata["name"]} {caw.__version__}')
     raise typer.Exit()
 
 
+# noinspection PyUnusedLocal
 @app.callback()
 def main(
         address: str = typer.Option(DEFAULT_ADDRESS, '--address', '-a', envvar='CHRIS_URL'),

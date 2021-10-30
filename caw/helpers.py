@@ -7,7 +7,7 @@ import typer
 from chris.models import Pipeline, PluginInstance
 from chris.client import ChrisClient, ChrisIncorrectLoginError, PipelineNotFoundError
 from caw.globals import DEFAULT_ADDRESS, DEFAULT_PASSWORD
-from caw.login import LoginManager, NotLoggedInError
+from caw.login.manager import LoginManager
 
 import logging
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class ClientPrecursor:
         self.password = None
         self.token = None
 
-    def __call__(self) -> ChrisClient:
+    def __call__(self) -> FriendlyClient:
         """
         Authenticate with ChRIS and construct the client object.
 
@@ -71,9 +71,8 @@ class ClientPrecursor:
         logger.debug('CUBE address: %s', self.address)
 
         if self.password == DEFAULT_PASSWORD:  # assume password not specified
-            try:
-                self.token = self.login_manager.get(self.address)
-            except NotLoggedInError:  # password not specified and not previously logged in
+            self.token = self.login_manager.get(self.address)
+            if not self.token:  # password not specified and not previously logged in
                 if 'CHRIS_TESTING' not in os.environ:
                     typer.secho('Using defaults (set CHRIS_TESTING=y to suppress this message): '
                                 f'{self.address}  {self.username}:{self.password}', dim=True, err=True)
@@ -88,6 +87,7 @@ class ClientPrecursor:
                 return FriendlyClient(self.address, username=self.username, password=self.password)
         except ChrisIncorrectLoginError as e:
             typer.secho(e.args[0], err=True)
+            # TODO caw logout
             raise typer.Abort()
         except Exception:
             typer.secho('Connection error\n'
