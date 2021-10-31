@@ -1,18 +1,22 @@
 import os
 import sys
-
-import requests.exceptions
-import typer
-from chris.models import Pipeline, InvalidFilesResourceUrlException
-from typing import Optional, List
 import logging
 from pathlib import Path
+from typing import Optional, List
+
+import typer
+import requests.exceptions
+
+from chris.types import CUBEAddress, CUBEUsername, CUBEPassword
+from chris.models import Pipeline, InvalidFilesResourceUrlException
 
 import caw
 from caw.movedata import upload as cube_upload, download as cube_download
 from caw.login.manager import LoginManager
 from caw.globals import DEFAULT_ADDRESS, DEFAULT_USERNAME, DEFAULT_PASSWORD
-from caw.helpers import ClientPrecursor, run_pipeline
+from caw.builder import ClientBuilder
+from caw.helpers import run_pipeline_with_progress
+
 
 if 'CAW_DEBUG' in os.environ:
     logging.basicConfig(level=logging.DEBUG)
@@ -20,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 login_manager = LoginManager()
-precursor = ClientPrecursor(login_manager)
+precursor = ClientBuilder(login_manager)
 
 app = typer.Typer(
     epilog='Examples and documentation at '
@@ -42,19 +46,24 @@ def show_version(value: bool):
 @app.callback()
 def main(
         address: str = typer.Option(DEFAULT_ADDRESS, '--address', '-a', envvar='CHRIS_URL'),
-        username: str = typer.Option(DEFAULT_USERNAME, '--username', '-u', envvar='CHRIS_USERNAME'),
-        password: str = typer.Option(DEFAULT_PASSWORD, '--password', '-p', envvar='CHRIS_PASSWORD'),
-        version: Optional[bool] = typer.Option(None, '--version', '-V',
-                                               callback=show_version, is_eager=True,
-                                               help='Print version.')
+        username: Optional[str] = typer.Option(
+            None, '--username', '-u', envvar='CHRIS_USERNAME',
+            help='Username of your ChRIS user account.'),
+        password: Optional[str] = typer.Option(
+            None, '--password', '-p', envvar='CHRIS_PASSWORD',
+            help='Password of your ChRIS user account. '
+            'If neither username nor password are specified, then the default '
+            f'account "{DEFAULT_USERNAME}:{DEFAULT_PASSWORD}" is used.'),
+        version: Optional[bool] = typer.Option(
+            None, '--version', '-V', callback=show_version, is_eager=True, help='Print version.')
 ):
     """
     A command line ChRIS client for pipeline execution and data management.
     """
     global precursor
-    precursor.address = address
-    precursor.username = username
-    precursor.password = password
+    precursor.address = CUBEAddress(address)
+    precursor.username = CUBEUsername(username)
+    precursor.password = CUBEPassword(password)
 
 
 @app.command()
@@ -62,12 +71,15 @@ def login(read_pass: bool = typer.Option(False, '--password-stdin', help='Take t
     """
     Login to ChRIS.
     """
-    if precursor.username == DEFAULT_USERNAME:
-        precursor.username = typer.prompt('username')
-    if read_pass:
-        precursor.password = ('\n'.join(sys.stdin)).rstrip('\n')
-    elif precursor.password == DEFAULT_PASSWORD:
-        precursor.password = typer.prompt('password', hide_input=True)
+
+    if not precursor.username:
+        precursor.username = CUBEUsername(typer.prompt('username'))
+
+    if not precursor.password:
+        if read_pass:
+            precursor.password = CUBEPassword(sys.stdin.read().rstrip('\n'))
+        else:
+            precursor.password = typer.prompt('password', hide_input=True)
 
     client = precursor()
     login_manager.login(client.addr, client.token)
@@ -103,7 +115,7 @@ def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
     client = precursor()
     plugin_instance = client.get_plugin_instance(target)
     chris_pipeline = client.get_pipeline(name)
-    run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
+    run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
 
 
 @app.command()
@@ -141,7 +153,7 @@ def upload(
         dircopy_instance.get_feed().set_description(description)
 
     if chris_pipeline:
-        run_pipeline(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
+        run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
     typer.echo(dircopy_instance.feed)
 
 

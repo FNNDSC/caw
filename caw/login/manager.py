@@ -11,6 +11,7 @@ from pathlib import Path
 from packaging import version
 
 import caw
+from chris.types import CUBEAddress, CUBEToken
 from caw.login.store import AbstractSecretStore, KeyringSecretStore, PlaintextSecretStore, use_keyring
 
 PreferredSecretStore: Type[AbstractSecretStore] = KeyringSecretStore if use_keyring else PlaintextSecretStore
@@ -93,12 +94,12 @@ class LoginManager:
         """
         self.__savefile.write_text(f'{{"version": "{self.VERSION}"}}')
 
-    def get_default_address(self, address: Optional[str] = None) -> Optional[str]:
+    def get_default_address(self, address: Optional[CUBEAddress] = None) -> Optional[CUBEAddress]:
         if address:
             return address
         if 'defaultAddress' not in self._config:
             return None
-        return self._config['defaultAddress']
+        return CUBEAddress(self._config['defaultAddress'])
 
     def _write_config(self):
         """
@@ -107,17 +108,15 @@ class LoginManager:
         with self.__savefile.open('w') as f:
             json.dump(self._config, f)
 
-    def get(self, address: Optional[str] = None) -> Optional[str]:
+    def get(self, address: Optional[CUBEAddress] = None) -> Optional[CUBEToken]:
         address = self.get_default_address(address)
         if not address:
             return None
-        return self._store.get(address)
+        return CUBEToken(self._store.get(address))
 
-    def logout(self, address: Optional[str] = None):
+    def logout(self, address: Optional[CUBEAddress] = None):
         """
         Remove secret from storage. If the address is the default address, then remove the default address as well.
-
-        :param address: CUBE address
         """
         address = self.get_default_address(address)
         if address == self.get_default_address() and 'defaultAddress' in self._config:
@@ -126,7 +125,7 @@ class LoginManager:
         self._store.clear(address)
         self._write_config()
 
-    def login(self, address: str, token: str):
+    def login(self, address: CUBEAddress, token: CUBEToken):
         self._store.set(address, token)
         self._config['defaultAddress'] = address
         self._write_config()
@@ -137,4 +136,4 @@ class LoginManager:
             typer.secho('For safer credentials storage, please run: '
                         '\n\n\tcaw logout'
                         '\n\tpip install keyring'
-                        f'\n\tcaw --address {address} login\n',  dim=True, err=True)
+                        f'\n\tcaw --address {address} login\n', dim=True, err=True)

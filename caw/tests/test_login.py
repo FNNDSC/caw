@@ -2,9 +2,9 @@ import unittest
 from unittest.mock import Mock
 
 import json
-from typing import Type, Union
 from pathlib import Path
 
+from chris.types import CUBEAddress, CUBEToken
 from caw.login.store import AbstractSecretStore, KeyringSecretStore, PlaintextSecretStore, use_keyring
 from caw.login.manager import LoginManager
 
@@ -47,8 +47,8 @@ class TestLoginManager(unittest.TestCase):
             return json.load(f)
 
     def test_default_address(self):
-        self.lm.login('https://example.com/api/v1/', 'berry')
-        self.store.set.assert_called_once_with('https://example.com/api/v1/', 'berry')
+        self.lm.login(CUBEAddress('https://example.com/api/v1/'), CUBEToken('berry'))
+        self.store.set.assert_called_once_with(CUBEAddress('https://example.com/api/v1/'), CUBEToken('berry'))
 
         content = self.getJson()
         self.assertIn('defaultAddress', content,
@@ -57,7 +57,7 @@ class TestLoginManager(unittest.TestCase):
                          msg='Default address is incorrect.')
 
         self.store.get = Mock(return_value='berry')
-        self.assertEqual(self.lm.get(), 'berry',
+        self.assertEqual(self.lm.get(), CUBEToken('berry'),
                          msg='Retrieved password for default CUBE address is incorrect.')
 
         self.lm.logout()

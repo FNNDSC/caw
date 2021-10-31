@@ -2,34 +2,20 @@ from os import path
 import requests
 from typing import Optional, Set, Union
 
+from chris.types import CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword
 from chris.models import PluginInstance, Plugin, Pipeline, UploadedFiles
-
-
-class ChrisClientError(Exception):
-    pass
-
-
-class ChrisIncorrectLoginError(ChrisClientError):
-    pass
-
-
-class ChrisResourceNotFoundError(ChrisClientError):
-    pass
-
-
-class PluginNotFoundError(ChrisResourceNotFoundError):
-    pass
-
-
-class PipelineNotFoundError(ChrisResourceNotFoundError):
-    pass
+from chris.errors import (
+    ChrisClientError, ChrisIncorrectLoginError, PluginNotFoundError, PipelineNotFoundError
+)
 
 
 class ChrisClient:
-    def __init__(self, address: str, username: Optional[str] = None, password: Optional[str] = None,
-                 token: Optional[str] = None):
+    def __init__(self, address: CUBEAddress,
+                 username: Optional[CUBEUsername] = None, password: Optional[CUBEPassword] = None,
+                 token: Optional[CUBEToken] = None):
         """
         Log into ChRIS.
+
         :param address: CUBE address
         :param username: account username
         :param password: account password
@@ -84,7 +70,8 @@ class ChrisClient:
         res = self._s.get(self.collection_links['user'])
         res.raise_for_status()
         data = res.json()
-        self.username = data['username']
+
+        self.username: CUBEUsername = CUBEUsername(data['username'])
         """
         The ChRIS user's username.
         """
