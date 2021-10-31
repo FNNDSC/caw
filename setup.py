@@ -4,7 +4,6 @@ from setuptools import setup
 with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
     readme = f.read()
 
-# noinspection PyPackageRequirements
 setup(
     name='caw',
     version='0.3.4',
