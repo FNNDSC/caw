@@ -21,3 +21,7 @@ class PipelineNotFoundError(ChrisResourceNotFoundError):
 
 class PaginationNotImplementedException(Exception):
     pass
+
+
+class WaitTimeoutException(Exception):
+    pass
