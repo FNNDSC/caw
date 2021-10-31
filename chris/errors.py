@@ -17,3 +17,7 @@ class PluginNotFoundError(ChrisResourceNotFoundError):
 
 class PipelineNotFoundError(ChrisResourceNotFoundError):
     pass
+
+
+class PaginationNotImplementedException(Exception):
+    pass

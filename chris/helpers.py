@@ -1,7 +1,3 @@
-class PaginationNotImplementedException(Exception):
-    pass
-
-
 def collection_helper(obj: dict = None) -> dict:
     if not obj:
         obj = {}
