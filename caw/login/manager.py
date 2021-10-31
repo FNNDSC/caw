@@ -55,7 +55,7 @@ class LoginManager:
         if self.__savefile.exists():
             if self._config_file_is_sane():
                 typer.secho(f'WARNING: config file {self.__savefile} was created by '
-                            f'an incompatible version of {caw.__pkg.metadata["name"]}.\n'
+                            f'an incompatible version of {caw.pkg.metadata["name"]}.\n'
                             'It will be overwritten with an empty configuration.',
                             dim=True, err=True)
                 self._write_empty_config()

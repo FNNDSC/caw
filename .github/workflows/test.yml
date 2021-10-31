@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
-    name: Python unittest
+  full_test:
+    name: Full test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

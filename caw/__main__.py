@@ -38,7 +38,7 @@ def show_version(value: bool):
     """
     if not value:
         return
-    typer.echo(f'{caw.__pkg.metadata["name"]} {caw.__version__}')
+    typer.echo(f'{caw.pkg.metadata["name"]} {caw.__version__}')
     raise typer.Exit()
 
 
