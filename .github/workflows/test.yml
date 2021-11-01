@@ -22,7 +22,7 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
       - name: Setup CUBE
-        uses: FNNDSC/miniChRIS@v6
+        uses: FNNDSC/miniChRIS@20211031
       - name: Prepare examples
         run: |
           examples/upload_reconstruction_pipeline.sh
