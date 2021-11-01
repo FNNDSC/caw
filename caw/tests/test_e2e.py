@@ -98,7 +98,7 @@ class TestEndToEnd(unittest.TestCase):
                       msg='"Example branching pipeline" not found in `caw search`')
 
         feed_url = sp.check_output(['caw', 'upload', '--pipeline', 'Example branching pipeline', '--', f.name],
-                                   text=True)
+                                   text=True).rstrip('\n')
         self.assertTrue(feed_url.startswith(address),
                         msg='Feed URL was not correctly printed after `caw upload`')
 

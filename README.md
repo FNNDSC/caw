@@ -197,7 +197,8 @@ First, set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
 Next, install the example pipeline.
 
 ```shell
-./testing/upload_reconstruction_pipeline.sh
+./examples/dummy_pipeline.sh
+./examples/upload_reconstruction_pipeline.sh
 ```
 
 Run all tests using the command
