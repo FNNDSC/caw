@@ -11,7 +11,7 @@ from chris.client import ChrisClient
 from chris.errors import ChrisIncorrectLoginError, PipelineNotFoundError
 
 from chris.types import CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword
-from caw.globals import DEFAULT_ADDRESS, DEFAULT_USERNAME, DEFAULT_PASSWORD
+from caw.constants import DEFAULT_ADDRESS, DEFAULT_USERNAME, DEFAULT_PASSWORD
 
 from caw.login.manager import LoginManager
 
