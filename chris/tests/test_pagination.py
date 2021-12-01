@@ -15,7 +15,7 @@ def session(mocker: MockerFixture) -> Mock:
 
 
 def test_pagination(session: Mock):
-    resource = PaginatedResource(url='https://example.com/', s=session)
+    resource = PaginatedResource(url=CUBEUrl('https://example.com/'), s=session)
     url = CUBEUrl('https://example.com/api/v1/something/')
     all_things = list(resource.fetch_paginated_raw(url, max_requests=10))
     assert all_things == [
