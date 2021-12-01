@@ -1,8 +1,3 @@
-import requests
-from pytest_mock import MockerFixture
-from unittest.mock import Mock
-
-
 data = {
     "cancelled_jobs": 0,
     "comments": "https://example.com/api/v1/3/comments/",
@@ -40,11 +35,3 @@ data = {
     "url": "https://example.com/api/v1/3/",
     "waiting_jobs": 0
 }
-
-
-def mock_session(mocker: MockerFixture) -> Mock:
-    m = mocker.Mock(spec=requests.Session)
-    res = mocker.Mock()
-    m.get.return_value = res
-    res.json.return_value = data
-    return m

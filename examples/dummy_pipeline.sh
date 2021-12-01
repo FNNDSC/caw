@@ -34,6 +34,14 @@ cat << EOF
 EOF
 )"
 
+#     a
+#    / \
+#   b   c
+# / | \  \
+# e f g   d
+#     |
+#     h
+
 branching="$(
 cat << EOF
 {"template":

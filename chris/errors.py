@@ -19,7 +19,11 @@ class PipelineNotFoundError(ChrisResourceNotFoundError):
     pass
 
 
-class PaginationNotImplementedException(Exception):
+class UnrecognizedResponseError(ChrisClientError):
+    pass
+
+
+class TooMuchPaginationError(ChrisClientError):
     pass
 
 

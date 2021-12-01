@@ -1,12 +1,14 @@
 import json
-from typing import Generator, Any, TypedDict
-from chris.cube.resource import AbstractResource
+from typing import Generator, Any, TypedDict, Type, TypeVar
+from chris.cube.resource import CUBEResource
 from chris.errors import UnrecognizedResponseError, TooMuchPaginationError
 from chris.types import CUBEUrl
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar('T', bound=CUBEResource)
 
 
 class JSONPaginatedResponse(TypedDict):
@@ -17,12 +19,16 @@ class JSONPaginatedResponse(TypedDict):
     collection_links: dict[str, CUBEUrl]
 
 
-class PaginatedResource(AbstractResource):
+class PaginatedResource(CUBEResource):
 
     __PaginatedResponseKeys = frozenset(JSONPaginatedResponse.__annotations__)
 
-    def fetch_paginated(self, url: CUBEUrl, max_requests=100
-                        ) -> Generator[dict[str, any], None, None]:
+    def fetch_paginated_objects(self, url: CUBEUrl, constructor=Type[T], max_requests=100
+                                ) -> Generator[T, None, None]:
+        yield from (constructor(s=self.s, **d) for d in self.fetch_paginated_raw(url, max_requests))
+
+    def fetch_paginated_raw(self, url: CUBEUrl, max_requests: int
+                            ) -> Generator[dict[str, any], None, None]:
         """
         Produce all values from a paginated endpoint.
 
@@ -41,7 +47,7 @@ class PaginatedResource(AbstractResource):
         yield from self.__get_results_from(url, data)
         if data['next']:
             print(data['next'])
-            yield from self.fetch_paginated(data['next'], max_requests - 1)
+            yield from self.fetch_paginated_raw(data['next'], max_requests - 1)
 
     # TODO in Python 3.10, we should use TypeGuard
     # https://docs.python.org/3.10/library/typing.html#typing.TypeGuard

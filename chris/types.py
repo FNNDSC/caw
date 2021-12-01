@@ -32,7 +32,11 @@ PipelineId = NewType('PipelineId', int)
 
 FilesUrl = NewType('FilesUrl', CUBEUrl)
 
+ParameterName = NewType('ParameterName', str)
 ParameterType = Union[str, int, float, bool]
 ParameterTypeName = Literal['string', 'integer', 'float', 'boolean']
 PipelineParameterId = NewType('ParameterLocalId', int)
 PluginParameterId = NewType('ParameterGlobalId', int)
+PluginInstanceId = NewType('PluginInstanceId', int)
+
+ComputeResourceName = NewType('ComputeResourceName', str)

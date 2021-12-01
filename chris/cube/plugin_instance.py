@@ -1,0 +1,61 @@
+from typing import Optional
+from datetime import datetime
+
+from chris.cube.resource.cube_resource import CUBEResource
+from chris.cube.feed import Feed
+from chris.types import (
+    CUBEUsername, CUBEUrl, PluginName, PluginVersion, PluginType,
+    PluginInstanceId, FeedId, PluginId, ComputeResourceName,
+    SwiftPath, ISOFormatDateString, PluginInstanceStatus, CUBEErrorCode
+)
+
+
+class PluginInstance(CUBEResource):
+    """
+    A *plugin instance* in _ChRIS_ is a computing job, i.e. an attempt to run
+    a computation (a non-interactive command-line app) to produce data.
+    """
+    id: PluginInstanceId
+    title: str
+    previous_id: Optional[int]
+    compute_resource_name: ComputeResourceName
+    plugin_id: PluginId
+    plugin_name: PluginName
+    plugin_version: PluginVersion
+    plugin_type: PluginType
+
+    pipeline_inst: Optional[int]
+    feed_id: FeedId
+    start_date: ISOFormatDateString
+    end_date: ISOFormatDateString
+    output_path: SwiftPath
+
+    status: PluginInstanceStatus
+
+    summary: str
+    raw: str
+    owner_username: CUBEUsername
+    cpu_limit: int
+    memory_limit: int
+    number_of_workers: int
+    gpu_limit: int
+    error_code: CUBEErrorCode
+
+    previous: CUBEUrl
+    feed: CUBEUrl
+    plugin: CUBEUrl
+    descendants: CUBEUrl
+    files: CUBEUrl
+    parameters: CUBEUrl
+    compute_resource: CUBEUrl
+    splits: CUBEUrl
+
+    def get_feed(self) -> Feed:
+        res = self.s.get(self.url).json()
+        return Feed(s=self.s, **res)
+
+    def get_start_date(self) -> datetime:
+        return datetime.fromisoformat(self.start_date)
+
+    def get_end_date(self) -> datetime:
+        return datetime.fromisoformat(self.end_date)

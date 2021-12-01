@@ -3,12 +3,12 @@ from pytest_mock import MockerFixture
 from unittest.mock import Mock
 
 from chris.cube.feed import Feed
-from chris.tests.mocks.feed import mock_session, data
+from chris.tests.mocks.data.feed import data
 
 
 @pytest.fixture
 def session(mocker: MockerFixture) -> Mock:
-    return mock_session(mocker)
+    return mocker.Mock()
 
 
 @pytest.fixture

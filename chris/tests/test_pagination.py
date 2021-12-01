@@ -5,18 +5,19 @@ from unittest.mock import Mock, call
 from chris.types import CUBEUrl
 from chris.cube.pagination import PaginatedResource
 
-from chris.tests.mocks.pagination import mock_session
+from chris.tests.mocks.session import mock_session
+from chris.tests.mocks.data.pagination import responses
 
 
 @pytest.fixture
 def session(mocker: MockerFixture) -> Mock:
-    return mock_session(mocker)
+    return mock_session(mocker, responses)
 
 
 def test_pagination(session: Mock):
     resource = PaginatedResource(url='https://example.com/', s=session)
     url = CUBEUrl('https://example.com/api/v1/something/')
-    all_things = list(resource.fetch_paginated(url, max_requests=10))
+    all_things = list(resource.fetch_paginated_raw(url, max_requests=10))
     assert all_things == [
         {'id': 1}, {'id': 2}, {'id': 3},
         {'id': 4}, {'id': 5}, {'id': 6},

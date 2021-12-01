@@ -1,7 +1,7 @@
 import abc
 from typing import TypedDict
 from dataclasses import dataclass, InitVar
-from chris.cube.resource import AbstractResource
+from chris.cube.resource.cube_resource import CUBEResource
 
 
 class CollectionEntry(TypedDict):
@@ -14,7 +14,7 @@ class Template(TypedDict):
 
 
 @dataclass(frozen=True)
-class ResourceWithTemplate(AbstractResource, abc.ABC):
+class ResourceWithTemplate(CUBEResource, abc.ABC):
     template: InitVar[Template]
 
     def __post_init__(self, template: Template):
