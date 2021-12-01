@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Generator, Sequence, Optional
 import requests
-from chris.cube.resource import CUBEResource, ResourceWithTemplate
-from chris.cube.pagination import PaginatedResource
+from chris.cube.resource import CUBEResource
+from chris.cube.pagination import fetch_paginated_objects
 from chris.cube.pipeline import Pipeline
 from chris.cube.plugin_tree import PluginTree
 
@@ -85,7 +85,7 @@ class MutablePluginTreeNode:
 
 
 @dataclass(frozen=True)
-class RegisteredPipeline(Pipeline, PaginatedResource):
+class RegisteredPipeline(CUBEResource, Pipeline):
     id: PipelineId
     locked: bool
     owner_username: CUBEUsername
@@ -97,7 +97,7 @@ class RegisteredPipeline(Pipeline, PaginatedResource):
     instances: CUBEUrl
 
     def get_default_parameters(self) -> Sequence[PipingParameter]:
-        return list(self.fetch_paginated_objects(url=self.default_parameters, constructor=PipingParameter))
+        return list(fetch_paginated_objects(s=self.s, url=self.default_parameters, constructor=PipingParameter))
 
     @staticmethod
     def map_parameters(params: Sequence[PipingParameter]) -> dict[PipingId, dict[ParameterName, ParameterType]]:
@@ -109,7 +109,7 @@ class RegisteredPipeline(Pipeline, PaginatedResource):
         return assembled_params
 
     def get_pipings(self) -> Generator[Piping, None, None]:
-        yield from self.fetch_paginated_objects(url=self.plugin_pipings, constructor=Piping)
+        yield from fetch_paginated_objects(s=self.s, url=self.plugin_pipings, constructor=Piping)
 
     def get_root(self) -> PluginTree:
         """

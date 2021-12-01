@@ -8,7 +8,8 @@ from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
 from chris.cube.files import ListOfDownloadableFiles
 from chris.cube.registered_pipeline import RegisteredPipeline
-from chris.cube.pagination import PaginatedResource
+from chris.cube.pagination import fetch_paginated_raw, fetch_paginated_objects
+from chris.cube.resource import ConnectedResource
 from chris.errors import (
     ChrisClientError, ChrisIncorrectLoginError, PluginNotFoundError, PipelineNotFoundError
 )
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class ChrisClient(PaginatedResource):
+class ChrisClient(ConnectedResource):
 
     address: CUBEAddress
     token: CUBEToken
@@ -146,7 +147,7 @@ class ChrisClient(PaginatedResource):
                       ) -> Generator[Plugin, None, None]:
         qs = self._join_qs(name_exact=name_exact, version=version)
         url = CUBEUrl(f'{self.search_addr_plugins}?{qs}')
-        return self.fetch_paginated_objects(url=url, constructor=Plugin)
+        return fetch_paginated_objects(s=self.s, url=url, constructor=Plugin)
 
     def get_plugin_instance(self, plugin: Union[CUBEUrl, PluginInstanceId]):
         """
@@ -183,7 +184,8 @@ class ChrisClient(PaginatedResource):
         return ListOfDownloadableFiles(url=url, s=self.s)
 
     def search_pipelines(self, name='') -> Generator[RegisteredPipeline, None, None]:
-        return self.fetch_paginated_objects(
+        return fetch_paginated_objects(
+            s=self.s,
             url=CUBEUrl(f"{self.collection_links['pipelines']}search/?name={name}"),
             constructor=RegisteredPipeline
         )

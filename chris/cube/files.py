@@ -4,7 +4,7 @@ from typing import Iterable, Generator
 import requests
 
 from chris.cube.resource import CUBEResource
-from chris.cube.pagination import PaginatedResource
+from chris.cube.pagination import fetch_paginated_objects
 from chris.types import FileResourceUrl, FileResourceName
 
 
@@ -26,9 +26,9 @@ class DownloadableFile(CUBEResource):
 
 
 @dataclass(frozen=True)
-class ListOfDownloadableFiles(Iterable[DownloadableFile], PaginatedResource):
+class ListOfDownloadableFiles(Iterable[DownloadableFile], CUBEResource):
     def __iter__(self) -> Generator[DownloadableFile, None, None]:
-        return self.fetch_paginated_objects(url=self.url, constructor=self._construct_downloadable_file)
+        return fetch_paginated_objects(s=self.s, url=self.url, constructor=self._construct_downloadable_file)
 
     @staticmethod
     def _construct_downloadable_file(s: requests.Session, **kwargs):
