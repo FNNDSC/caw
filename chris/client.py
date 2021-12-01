@@ -3,12 +3,14 @@ from dataclasses import dataclass, field
 import requests
 from typing import Optional, Union, Generator
 
-from chris.types import CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword, CUBEUrl, PluginInstanceId
+from chris.types import (
+    CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword, CUBEUrl, PluginInstanceId, PluginName, PluginVersion
+)
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
 from chris.cube.files import ListOfDownloadableFiles
 from chris.cube.registered_pipeline import RegisteredPipeline
-from chris.cube.pagination import fetch_paginated_raw, fetch_paginated_objects
+from chris.cube.pagination import fetch_paginated_objects
 from chris.cube.resource import ConnectedResource
 from chris.errors import (
     ChrisClientError, ChrisIncorrectLoginError, PluginNotFoundError, PipelineNotFoundError
@@ -122,11 +124,6 @@ class ChrisClient(ConnectedResource):
         res.raise_for_status()
         return res.json()
 
-    def _url2plugin(self, url):
-        res = self.s.get(url)
-        res.raise_for_status()
-        return Plugin(**res.json(), s=self.s)
-
     def get_plugin(self, name_exact='', version='', url='') -> Plugin:
         """
         Get a single plugin, either searching for it by its exact name, or by URL.
@@ -135,13 +132,19 @@ class ChrisClient(ConnectedResource):
         :param version: (optional) version of plugin
         :param url: (alternative to name_exact) url of plugin
         """
-        if name_exact:
-            search = self.search_plugin(name_exact, version)
-            return peek(search, mt=PluginNotFoundError)
-        elif url:
-            return self._url2plugin(url)
-        else:
-            raise ValueError('Must give either plugin name or url')
+        if url:
+            return self.get_plugin_by_url(url)
+        return self.get_plugin_by_name(name_exact, version)
+
+    def get_plugin_by_url(self, url: Union[CUBEUrl, str]):
+        res = self.s.get(url)
+        res.raise_for_status()
+        return Plugin(**res.json(), s=self.s)
+
+    def get_plugin_by_name(self, name_exact: Union[PluginName, str],
+                           version: Optional[Union[PluginVersion, str]] = None):
+        search = self.search_plugin(name_exact, version)
+        return peek(search, mt=PluginNotFoundError)
 
     def search_plugin(self, name_exact: str, version: Optional[str] = None
                       ) -> Generator[Plugin, None, None]:
