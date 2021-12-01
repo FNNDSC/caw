@@ -1,6 +1,6 @@
 from pytest_mock import MockerFixture
 from chris.cube.registered_pipeline import Piping, MutablePluginTreeNode
-from chris.plugin_tree import PluginTree
+from chris.cube.plugin_tree import PluginTree
 from chris.types import PluginId, PipingId, PipelineId, CUBEUrl, ParameterName
 
 

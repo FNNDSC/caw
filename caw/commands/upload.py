@@ -5,7 +5,7 @@ import logging
 import typer
 import requests
 
-from chris.models import Pipeline
+from chris.cube.pipeline import Pipeline
 from caw.commands.store import app, build_client
 from caw.movedata import upload as cube_upload
 from caw.run_pipeline import run_pipeline_with_progress

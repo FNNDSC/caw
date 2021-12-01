@@ -21,7 +21,7 @@ The steady state of disks is full.
 
 class TestUpload(unittest.TestCase):
 
-    client = ChrisClient(
+    client = ChrisClient.from_login(
         address='http://localhost:8000/api/v1/',
         username='chris',
         password='chris1234'

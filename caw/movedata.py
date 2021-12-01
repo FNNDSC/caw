@@ -1,20 +1,23 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import typer
 from chris.client import ChrisClient
-from chris.models import UploadedFile
+from chris.cube.files import DownloadableFile
+from chris.types import CUBEUrl
 import logging
 from pathlib import Path
 
 
 def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_threads=4):
 
+    username = client.get_username()
+
     if parent_folder:
-        upload_folder = f'{client.username}/uploads/{parent_folder}/{datetime.datetime.now().isoformat()}/'
+        upload_folder = f'{username}/uploads/{parent_folder}/{datetime.datetime.now().isoformat()}/'
     else:
-        upload_folder = f'{client.username}/uploads/{datetime.datetime.now().isoformat()}/'
+        upload_folder = f'{username}/uploads/{datetime.datetime.now().isoformat()}/'
 
     input_files = []
     for mri in files:
@@ -31,7 +34,7 @@ def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_thre
 
     with typer.progressbar(label='Uploading files', length=len(input_files)) as bar:
         def upload_file(input_file: str):
-            client.upload(input_file, upload_folder)
+            client.upload(Path(input_file), Path(upload_folder))
             bar.update(1)
 
         with ThreadPoolExecutor(max_workers=upload_threads) as pool:
@@ -45,7 +48,7 @@ def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_thre
     return upload_folder
 
 
-def download(client: ChrisClient, url: str, destination: Path, threads: 4):
+def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, threads: 4):
     """
     Download all the files from a given ChRIS API url.
     :param client: ChRIS client
@@ -60,7 +63,7 @@ def download(client: ChrisClient, url: str, destination: Path, threads: 4):
         typer.secho(f'Cannot download into {destination}: is a file', fg=typer.colors.RED, err=True)
         raise typer.Abort()
 
-    def __calculate_target(remote_file: UploadedFile) -> Tuple[Path, UploadedFile]:
+    def __calculate_target(remote_file: DownloadableFile) -> Tuple[Path, DownloadableFile]:
         """
         Decide on a download location for a file resource in ChRIS.
         Create the parent directory if needed.
@@ -74,12 +77,12 @@ def download(client: ChrisClient, url: str, destination: Path, threads: 4):
         os.makedirs(target.parent, exist_ok=True)
         return target, remote_file
 
-    search = client.get_uploadedfiles(url)
+    search = tuple(client.get_files(url))
     with typer.progressbar(search, length=len(search), label='Getting information') as progress:
         to_download = frozenset(__calculate_target(remote_file) for remote_file in progress)
 
     with typer.progressbar(length=len(to_download), label='Downloading files') as progress:
-        def download_file(t: Tuple[Path, UploadedFile]) -> int:
+        def download_file(t: Tuple[Path, DownloadableFile]) -> int:
             """
             Download file and move the progress bar
             :param t: tuple

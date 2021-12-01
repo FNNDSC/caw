@@ -20,5 +20,4 @@ def login(read_pass: bool = typer.Option(False, '--password-stdin', help='Take t
             build_client.password = typer.prompt('password', hide_input=True)
 
     client = build_client()
-    login_manager.login(client.addr, client.token)
-
+    login_manager.login(client.address, client.token)

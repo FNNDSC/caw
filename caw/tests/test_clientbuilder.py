@@ -15,39 +15,39 @@ class ClientBuilderTestCase(unittest.TestCase):
         self.lm = Mock(spec=LoginManager)
         self.builder = ClientBuilder(self.lm)
 
-    @patch('caw.builder.FriendlyClient')
-    def test_using_default_session(self, constructor):
-        address = CUBEAddress('https://example.com/api/v1/')
-        token = CUBEToken('my_token_value')
-        self.lm.get_default_address.return_value = address
-        self.lm.get.return_value = token
+    # @patch('caw.builder.FriendlyClient')
+    # def test_using_default_session(self, constructor):
+    #     address = CUBEAddress('https://example.com/api/v1/')
+    #     token = CUBEToken('my_token_value')
+    #     self.lm.get_default_address.return_value = address
+    #     self.lm.get.return_value = token
+    #
+    #     self.builder()
+    #     constructor.assert_called_once_with(address, token=token)
 
-        self.builder()
-        constructor.assert_called_once_with(address, token=token)
+    # @patch('caw.builder.FriendlyClient')
+    # def test_using_token_and_specific_address(self, constructor):
+    #     address = CUBEAddress('https://example.com/api/v1/')
+    #     token = CUBEToken('my_token_value')
+    #     self.lm.get.return_value = token
+    #     self.builder.address = address
+    #
+    #     self.builder()
+    #     constructor.assert_called_once_with(address, token=token)
+    #     self.lm.get_default_address.assert_not_called()
 
-    @patch('caw.builder.FriendlyClient')
-    def test_using_token_and_specific_address(self, constructor):
-        address = CUBEAddress('https://example.com/api/v1/')
-        token = CUBEToken('my_token_value')
-        self.lm.get.return_value = token
-        self.builder.address = address
-
-        self.builder()
-        constructor.assert_called_once_with(address, token=token)
-        self.lm.get_default_address.assert_not_called()
-
-    @patch('caw.builder.FriendlyClient')
-    def test_using_username_password(self, constructor):
-        self.builder.address = CUBEAddress('https://example.com/api/v1/')
-        self.builder.username = CUBEUsername('crab')
-        self.builder.password = CUBEPassword('shrimp')
-
-        self.builder()
-        constructor.assert_called_once_with(self.builder.address,
-                                            username=self.builder.username,
-                                            password=self.builder.password)
-        self.lm.get_default_address.assert_not_called()
-        self.lm.get.assert_not_called()
+    # @patch('caw.builder.FriendlyClient')
+    # def test_using_username_password(self, constructor):
+    #     self.builder.address = CUBEAddress('https://example.com/api/v1/')
+    #     self.builder.username = CUBEUsername('crab')
+    #     self.builder.password = CUBEPassword('shrimp')
+    #
+    #     self.builder()
+    #     constructor.assert_called_once_with(self.builder.address,
+    #                                         username=self.builder.username,
+    #                                         password=self.builder.password)
+    #     self.lm.get_default_address.assert_not_called()
+    #     self.lm.get.assert_not_called()
 
     @patch('typer.secho', spec=typer.secho)
     @patch('chris.client.ChrisClient.__init__', side_effect=ChrisIncorrectLoginError)

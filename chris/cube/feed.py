@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from chris.types import CUBEUrl, FeedId, ISOFormatDateString, CUBEUsername, FilesUrl
 
-from chris.helpers import collection_helper
+from chris.helpers.collection import collection_helper
 from chris.cube.resource.templated_resource import ResourceWithTemplate
 
 

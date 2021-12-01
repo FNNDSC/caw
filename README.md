@@ -191,6 +191,8 @@ pip install -e .
 
 ### Testing
 
+TODO instructions for Pytest.
+
 First, set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
 (say, using [_miniChRIS_](https://github.com/FNNDSC/miniChRIS)).
 
@@ -204,7 +206,7 @@ Next, install the example pipeline.
 Run all tests using the command
 
 ```shell
-python -m unittest
+pytest
 ```
 
 The end-to-end test is disabled by default because it will create a _ChRIS_ account and
@@ -213,5 +215,5 @@ affect `caw` user settings. It is recommended to run it in a container instead.
 ```shell
 docker build -t caw .
 docker run --rm --net=host --userns=host \
-       -e CAW_TEST_FULL=y caw python -m unittest caw.tests.test_e2e
+       -e CAW_TEST_FULL=y caw pytest
 ```

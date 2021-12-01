@@ -3,7 +3,7 @@ import typer
 from caw.commands.store import app, build_client
 from caw.movedata import download as cube_download
 
-from chris.models import InvalidFilesResourceUrlException
+from chris.cube.pagination import UnrecognizedResponseException
 
 
 @app.command()
@@ -18,6 +18,6 @@ def download(
     client = build_client()
     try:
         cube_download(client=client, url=url, destination=destination, threads=threads)
-    except InvalidFilesResourceUrlException as e:
+    except UnrecognizedResponseException as e:  # TODO different error please
         typer.secho(str(e), fg=typer.colors.RED, err=True)
         raise typer.Abort()

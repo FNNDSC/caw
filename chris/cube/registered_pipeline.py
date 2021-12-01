@@ -3,8 +3,8 @@ from typing import Generator, Sequence, Optional
 import requests
 from chris.cube.resource import CUBEResource, ResourceWithTemplate
 from chris.cube.pagination import PaginatedResource
-from chris.pipeline import Pipeline
-from chris.plugin_tree import PluginTree
+from chris.cube.pipeline import Pipeline
+from chris.cube.plugin_tree import PluginTree
 
 from chris.types import (
     CUBEUrl, PipelineId, CUBEUsername, ISOFormatDateString,
@@ -56,9 +56,10 @@ class Piping(CUBEResource):
     id: PipingId
     plugin_id: PluginId
     pipeline_id: PipelineId
-    previous: Optional[PipingId]
+    previous: CUBEUrl
     plugin: CUBEUrl
     pipeline: CUBEUrl
+    previous_id: Optional[PipingId] = None
 
 
 @dataclass
@@ -84,7 +85,7 @@ class MutablePluginTreeNode:
 
 
 @dataclass(frozen=True)
-class RegisteredPipeline(Pipeline, PaginatedResource, ResourceWithTemplate):
+class RegisteredPipeline(Pipeline, PaginatedResource):
     id: PipelineId
     locked: bool
     owner_username: CUBEUsername
@@ -104,7 +105,7 @@ class RegisteredPipeline(Pipeline, PaginatedResource, ResourceWithTemplate):
             p.plugin_piping_id: {} for p in params
         }
         for p in params:
-            assembled_params[p.plugin_piping_id][ParameterName(p.param_name)] = ParameterType(p.value)
+            assembled_params[p.plugin_piping_id][ParameterName(p.param_name)] = p.value
         return assembled_params
 
     def get_pipings(self) -> Generator[Piping, None, None]:
@@ -127,7 +128,7 @@ class RegisteredPipeline(Pipeline, PaginatedResource, ResourceWithTemplate):
             pipings_map[piping.id] = node
 
             if piping.previous:
-                pipings_map[piping.previous].children.append(node)
+                pipings_map[piping.previous_id].children.append(node)
             else:
                 if root is not None:
                     raise PipelineHasMultipleRootsException()

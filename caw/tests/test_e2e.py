@@ -70,6 +70,10 @@ def poll_feed(feed_url: str, jobs_count: int, poll_interval=10, timeout=300) -> 
     }
     data = {}
     while timer <= timeout:
+
+        print(f'calling get with {feed_url}')
+        import logging
+        logging.getLogger().setLevel(logging.DEBUG)
         res = requests.get(feed_url, headers=headers, auth=(username, password))
         res.raise_for_status()
         data = res.json()
@@ -101,7 +105,8 @@ class TestEndToEnd(unittest.TestCase):
                                    text=True).rstrip('\n')
         self.assertTrue(feed_url.startswith(address),
                         msg='Feed URL was not correctly printed after `caw upload`')
-
+        self.assertTrue(feed_url.endswith('/'),
+                        msg='Feed URL was not correctly printed after `caw upload`')
         feed_data = poll_feed(feed_url, jobs_count=9)
 
         with TemporaryDirectory() as tmpdir:

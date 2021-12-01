@@ -40,3 +40,7 @@ PluginParameterId = NewType('ParameterGlobalId', int)
 PluginInstanceId = NewType('PluginInstanceId', int)
 
 ComputeResourceName = NewType('ComputeResourceName', str)
+
+FileResourceName = NewType('FileResourceName', str)
+FileResourceUrl = NewType('FileResourceUrl', str)
+FileId = NewType('FileId', int)

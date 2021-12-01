@@ -1,12 +1,20 @@
 import json
-from typing import Generator, Any, TypedDict, Type, TypeVar
+from typing import Generator, Any, TypedDict, Callable, TypeVar
 from chris.cube.resource import CUBEResource
-from chris.errors import UnrecognizedResponseError, TooMuchPaginationError
 from chris.types import CUBEUrl
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class UnrecognizedResponseException(Exception):
+    pass
+
+
+class TooMuchPaginationException(Exception):
+    pass
+
 
 T = TypeVar('T', bound=CUBEResource)
 
@@ -16,14 +24,13 @@ class JSONPaginatedResponse(TypedDict):
     next: CUBEUrl
     previous: CUBEUrl
     results: list[dict[str, Any]]
-    collection_links: dict[str, CUBEUrl]
 
 
 class PaginatedResource(CUBEResource):
 
     __PaginatedResponseKeys = frozenset(JSONPaginatedResponse.__annotations__)
 
-    def fetch_paginated_objects(self, url: CUBEUrl, constructor=Type[T], max_requests=100
+    def fetch_paginated_objects(self, url: CUBEUrl, constructor=Callable[..., T], max_requests=100
                                 ) -> Generator[T, None, None]:
         yield from (constructor(s=self.s, **d) for d in self.fetch_paginated_raw(url, max_requests))
 
@@ -38,15 +45,15 @@ class PaginatedResource(CUBEResource):
                              a call to this method may make in total
         """
         if max_requests <= 0:
-            raise TooMuchPaginationError()
+            raise TooMuchPaginationException()
 
-        res = self.s.get(url)
+        logger.debug('%s', url)
+        res = self.s.get(url)  # TODO pass qs params separately?
         res.raise_for_status()
         data = res.json()
 
         yield from self.__get_results_from(url, data)
         if data['next']:
-            print(data['next'])
             yield from self.fetch_paginated_raw(data['next'], max_requests - 1)
 
     # TODO in Python 3.10, we should use TypeGuard
@@ -63,15 +70,15 @@ class PaginatedResource(CUBEResource):
                           '%s',
                           url,
                           json.dumps(data, indent=4))
-            raise UnrecognizedResponseError(f'Response from {url} is invalid.')
+            raise UnrecognizedResponseException(f'Response from {url} is invalid.')
 
-        if not frozenset(data.keys()) == cls.__PaginatedResponseKeys:
+        if cls.__PaginatedResponseKeys > frozenset(data.keys()):
             logging.debug('Invalid response from %s\n'
                           'dict keys did not match: %s\n'
                           '%s',
                           url,
                           str(cls.__PaginatedResponseKeys),
                           json.dumps(data, indent=4))
-            raise UnrecognizedResponseError(f'Response from {url} is invalid.')
+            raise UnrecognizedResponseException(f'Response from {url} is invalid.')
 
         return data['results']

@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import typer
 
-from chris.models import Pipeline
+from chris.cube.pipeline import Pipeline
 from chris.client import ChrisClient
 from chris.errors import ChrisIncorrectLoginError, PipelineNotFoundError
 
@@ -87,8 +87,8 @@ class ClientBuilder:
         Use token authentication if given a token. Otherwise, use username and password.
         """
         if token:
-            return FriendlyClient(address, token=token)
-        return FriendlyClient(address, username=username, password=password)
+            return FriendlyClient(address=address, token=token)
+        return FriendlyClient.from_login(address=address, username=username, password=password)
 
     def __call__(self) -> FriendlyClient:
         """
@@ -110,10 +110,10 @@ class ClientBuilder:
             return self._create_client_with(address, token, username, password)
         except ChrisIncorrectLoginError as e:
             self._handle_incorrect_login(e, address, token)
-        except Exception as e:
-            typer.secho('Unknown connection error', fg=typer.colors.RED, err=True)
-            typer.echo(str(e), err=True)
-            raise typer.Abort()
+        # except Exception as e:
+        #     typer.secho('Unknown connection error', fg=typer.colors.RED, err=True)
+        #     typer.echo(str(e), err=True)
+        #     raise typer.Abort()
 
     def _handle_incorrect_login(self, e: ChrisIncorrectLoginError, address: CUBEAddress,
                                 token: Optional[CUBEToken] = None):

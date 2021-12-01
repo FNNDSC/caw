@@ -1,13 +1,15 @@
 import typer
 
-from chris.client import Pipeline, PluginInstance
+from chris.cube.pipeline import Pipeline
+from chris.cube.plugin_instance import PluginInstance
 
 
 def run_pipeline_with_progress(chris_pipeline: Pipeline, plugin_instance: PluginInstance):
     """
     Helper to execute a pipeline with a progress bar.
     """
-    with typer.progressbar(plugin_instance.append_pipeline(chris_pipeline),
-                           length=len(chris_pipeline.pipings), label='Scheduling pipeline') as proto_pipeline:
+    plugin_root = chris_pipeline.get_root()
+    with typer.progressbar(plugin_root.run(plugin_instance.id),
+                           length=len(plugin_root), label='Scheduling pipeline') as proto_pipeline:
         for _ in proto_pipeline:
             pass

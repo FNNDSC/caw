@@ -1,4 +1,3 @@
-
 class ChrisClientError(Exception):
     pass
 
@@ -16,14 +15,6 @@ class PluginNotFoundError(ChrisResourceNotFoundError):
 
 
 class PipelineNotFoundError(ChrisResourceNotFoundError):
-    pass
-
-
-class UnrecognizedResponseError(ChrisClientError):
-    pass
-
-
-class TooMuchPaginationError(ChrisClientError):
     pass
 
 

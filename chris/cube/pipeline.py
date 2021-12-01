@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from chris.plugin_tree import PluginTree
+from chris.cube.plugin_tree import PluginTree
 
 
 @dataclass(frozen=True)

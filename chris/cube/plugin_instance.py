@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
 
@@ -10,14 +11,14 @@ from chris.types import (
 )
 
 
+@dataclass(frozen=True)
 class PluginInstance(CUBEResource):
     """
     A *plugin instance* in _ChRIS_ is a computing job, i.e. an attempt to run
     a computation (a non-interactive command-line app) to produce data.
     """
-    id: PluginInstanceId
+    id: Optional[PluginInstanceId]
     title: str
-    previous_id: Optional[int]
     compute_resource_name: ComputeResourceName
     plugin_id: PluginId
     plugin_name: PluginName
@@ -49,6 +50,12 @@ class PluginInstance(CUBEResource):
     parameters: CUBEUrl
     compute_resource: CUBEUrl
     splits: CUBEUrl
+
+    previous_id: Optional[int] = None
+    """
+    FS plugins will not produce a ``previous_id`` value
+    (even though they will return ``"previous": null``)
+    """
 
     def get_feed(self) -> Feed:
         res = self.s.get(self.url).json()

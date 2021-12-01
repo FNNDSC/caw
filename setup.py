@@ -1,13 +1,13 @@
 from os import path
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
     readme = f.read()
 
 setup(
     name='caw',
-    version='0.3.4',
-    packages=['caw', 'caw.login', 'chris'],
+    version='0.4.0',
+    packages=find_packages(exclude=('chris.tests.*', 'caw.tests.*')),
     url='https://github.com/FNNDSC/caw',
     license='MIT',
     author='Jennings Zhang',

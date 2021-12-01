@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Generator
+from typing import Generator, Collection
 from collections import deque
 from chris.types import CUBEUrl, ParameterType, PluginInstanceId
 from chris.cube.plugin import Plugin
@@ -8,7 +8,7 @@ from chris.cube.resource import ConnectedResource
 
 
 @dataclass(frozen=True)
-class PluginTree(ConnectedResource):
+class PluginTree(ConnectedResource, Collection['PluginTree']):
     """
     A ``PluginTree`` is an immutable node of a directed acyclic graph
     of plugins and default parameters for each plugin.
@@ -16,6 +16,7 @@ class PluginTree(ConnectedResource):
 
     CONSTRAINT: all plugins must be associated with the same CUBE.
     """
+
     plugin: CUBEUrl
     default_parameters: dict[str, ParameterType]
     children: tuple['PluginTree', ...] = field(default_factory=tuple)
@@ -69,3 +70,15 @@ class PluginTree(ConnectedResource):
             current = queue.popleft()
             yield current
             queue.extend(current.children)
+
+    def __iter__(self):
+        return self.dfs()
+
+    def __len__(self):
+        count = 0
+        for _ in self:
+            count += 1
+        return count
+
+    def __contains__(self, __x: object) -> bool:
+        return any(__x == e for e in self)

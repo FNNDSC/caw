@@ -1,61 +1,77 @@
-from os import path
+from pathlib import Path
+from dataclasses import dataclass, field
 import requests
-from typing import Optional, Set, Union
+from typing import Optional, Union, Generator
 
-from chris.types import CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword
-from chris.models import PluginInstance, Plugin, Pipeline, UploadedFiles
+from chris.types import CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword, CUBEUrl, PluginInstanceId
+from chris.cube.plugin import Plugin
+from chris.cube.plugin_instance import PluginInstance
+from chris.cube.files import ListOfDownloadableFiles
+from chris.cube.registered_pipeline import RegisteredPipeline
+from chris.cube.pagination import PaginatedResource
 from chris.errors import (
     ChrisClientError, ChrisIncorrectLoginError, PluginNotFoundError, PipelineNotFoundError
 )
+from chris.helpers.peek import peek
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class ChrisClient:
-    def __init__(self, address: CUBEAddress,
-                 username: Optional[CUBEUsername] = None, password: Optional[CUBEPassword] = None,
-                 token: Optional[CUBEToken] = None):
-        """
-        Log into ChRIS.
+@dataclass(frozen=True)
+class ChrisClient(PaginatedResource):
 
-        :param address: CUBE address
-        :param username: account username
-        :param password: account password
-        :param token: use token authorization, takes priority over basic authorization
-        """
-        if not address.endswith('/api/v1/'):
+    address: CUBEAddress
+    token: CUBEToken
+
+    collection_links: dict[str, CUBEUrl] = field(init=False)
+    s: requests.Session = field(init=False)
+    url: CUBEUrl = field(init=False)
+    """
+    An alias for ``address``
+    """
+
+    def __post_init__(self):
+        if not self.address.endswith('/api/v1/'):
             raise ValueError('Address of CUBE must end with "/api/v1/"')
-        self.addr = address
-        self.search_addr_plugins = address + 'plugins/search/'
-        self.search_addr_plugins_instances = address + 'plugins/instances/search/'
-        self.search_addr_pipelines = address + 'pipelines/search/'
+        object.__setattr__(self, 'url', self.address)
+        object.__setattr__(self, 's', self.__start_session(self.token))
+        object.__setattr__(self, 'collection_links', self.__get_collection_links())
 
-        self._s = requests.Session()
-        self._s.headers.update({'Accept': 'application/json'})
+    @classmethod
+    def from_login(cls,
+                   address: Union[CUBEAddress, str],
+                   username: Union[CUBEUsername, str],
+                   password: Union[CUBEPassword, str]) -> 'ChrisClient':
+        login = requests.post(address + 'auth-token/', json={
+            'username': username,
+            'password': password
+        })
+        if login.status_code == 400:
+            res = login.json()
+            raise ChrisIncorrectLoginError(
+                res['non_field_errors'][0] if 'non_field_errors' in res else login.text
+            )
+        login.raise_for_status()
+        return cls(address=address, token=login.json()['token'])
 
-        if not token:
-            if not username or not password:
-                raise ChrisIncorrectLoginError('Username and password are required.')
-
-            auth_url = self.addr + 'auth-token/'
-            login = self._s.post(auth_url, json={
-                'username': username,
-                'password': password
-            })
-            if login.status_code == 400:
-                res = login.json()
-                raise ChrisIncorrectLoginError(res['non_field_errors'][0] if 'non_field_errors' in res else login.text)
-            login.raise_for_status()
-            token = login.json()['token']
-
-        self._s.headers.update({
+    @staticmethod
+    def __start_session(token) -> requests.Session:
+        s = requests.Session()
+        s.headers.update({
+            'Accept': 'application/json',
             'Content-Type': 'application/vnd.collection+json',
             'Authorization': 'Token ' + token
         })
-        self.token = token
-        """
-        HTTP basic authentication token.
-        """
+        return s
 
-        res = self._s.get(address)
+    def __get_collection_links(self) -> dict[str, CUBEUrl]:
+        """
+        Make a request to the CUBE address. Calling this method verifies
+        that the login token is correct.
+        """
+        res = self.s.get(self.address)
         if res.status_code == 401:
             data = res.json()
             raise ChrisIncorrectLoginError(data['detail'] if 'detail' in data else res.text)
@@ -65,33 +81,36 @@ class ChrisClient:
         data = res.json()
         if 'collection_links' not in data or 'uploadedfiles' not in data['collection_links']:
             raise ChrisClientError(f'Unexpected CUBE response: {res.text}')
-        self.collection_links = data['collection_links']
+        return data['collection_links']
 
-        res = self._s.get(self.collection_links['user'])
-        res.raise_for_status()
-        data = res.json()
+    @property
+    def search_addr_plugins(self) -> CUBEUrl:
+        return CUBEUrl(self.address + 'plugins/search/')
 
-        self.username: CUBEUsername = CUBEUsername(data['username'])
-        """
-        The ChRIS user's username.
-        """
+    @property
+    def search_addr_plugins_instances(self) -> CUBEUrl:
+        return CUBEUrl(self.address + 'plugins/instances/search/')
 
-    def upload(self, file_path: str, upload_folder: str):
+    @property
+    def search_addr_pipelines(self) -> CUBEUrl:
+        return CUBEUrl(self.address + 'pipelines/search/')
+
+    def upload(self, file_path: Path, upload_folder: Path) -> dict:
         """
         Upload a local file into ChRIS backend Swift storage.
+
         :param file_path: local file path
         :param upload_folder: path in Swift where to upload to
         :return: response
         """
-        bname = path.basename(file_path)
-        upload_path = path.join(upload_folder, bname)
+        upload_path = upload_folder / file_path.name
 
         with open(file_path, 'rb') as file_object:
             files = {
-                'upload_path': (None, upload_path),
-                'fname': (bname, file_object)
+                'upload_path': (None, str(upload_path)),
+                'fname': (file_path.name, file_object)
             }
-            res = self._s.post(
+            res = self.s.post(
                 self.collection_links['uploadedfiles'],
                 files=files,
                 headers={
@@ -103,53 +122,47 @@ class ChrisClient:
         return res.json()
 
     def _url2plugin(self, url):
-        res = self._s.get(url)
+        res = self.s.get(url)
         res.raise_for_status()
-        return Plugin(**res.json(), session=self._s)
+        return Plugin(**res.json(), s=self.s)
 
     def get_plugin(self, name_exact='', version='', url='') -> Plugin:
         """
         Get a single plugin, either searching for it by its exact name, or by URL.
+
         :param name_exact: name of plugin
         :param version: (optional) version of plugin
         :param url: (alternative to name_exact) url of plugin
-        :return:
         """
         if name_exact:
             search = self.search_plugin(name_exact, version)
-            return search.pop()
+            return peek(search, mt=PluginNotFoundError)
         elif url:
             return self._url2plugin(url)
         else:
             raise ValueError('Must give either plugin name or url')
 
-    def search_plugin(self, name_exact: str, version: '') -> Set[Plugin]:
-        payload = {
-            'name_exact': name_exact
-        }
-        if version:
-            payload['version'] = version
-        res = self._s.get(self.search_addr_plugins, params=payload)
-        res.raise_for_status()
-        data = res.json()
-        if data['count'] < 1:
-            raise PluginNotFoundError(name_exact)
-        return set(Plugin(**pldata, session=self._s) for pldata in data['results'])
+    def search_plugin(self, name_exact: str, version: Optional[str] = None
+                      ) -> Generator[Plugin, None, None]:
+        qs = self._join_qs(name_exact=name_exact, version=version)
+        url = CUBEUrl(f'{self.search_addr_plugins}?{qs}')
+        return self.fetch_paginated_objects(url=url, constructor=Plugin)
 
-    def get_plugin_instance(self, id: Union[int, str]):
+    def get_plugin_instance(self, plugin: Union[CUBEUrl, PluginInstanceId]):
         """
         Get a plugin instance.
-        :param id: Either a plugin instance ID or URL
+        :param plugin: Either a plugin instance ID or URL
         :return: plugin instance
         """
-        res = self._s.get(id if '/' in id else f'{self.addr}plugins/instances/{id}/')
+        url = plugin if '/' in plugin else f'{self.address}plugins/instances/{plugin}/'
+        res = self.s.get(url)
         res.raise_for_status()
-        return PluginInstance(**res.json())
+        return PluginInstance(**res.json(), s=self.s)
 
     def run(self, plugin_name='', plugin_url='', plugin: Optional[PluginInstance] = None,
             params: Optional[dict] = None) -> PluginInstance:
         """
-        Create a plugin instance. Either procide a plugin object,
+        Create a plugin instance. Either provide a plugin object,
         or search for a plugin by name or URL.
         :param plugin: plugin to run
         :param plugin_name: name of plugin to run
@@ -161,29 +174,29 @@ class ChrisClient:
             plugin = self.get_plugin(name_exact=plugin_name, url=plugin_url)
         return plugin.create_instance(params)
 
-    def search_uploadedfiles(self, fname='', fname_exact='') -> UploadedFiles:
-        query = {
-            'fname': fname,
-            'fname_exact': fname_exact
-        }
-        qs = '&'.join([f'{k}={v}' for k, v in query.items() if v])
-        url = f"{self.collection_links['uploadedfiles']}search/?{qs}"
-        return self.get_uploadedfiles(url)
+    def search_uploadedfiles(self, fname='', fname_exact='') -> ListOfDownloadableFiles:
+        qs = self._join_qs(fname=fname, fname_exact=fname_exact)
+        url = CUBEUrl(f"{self.collection_links['uploadedfiles']}search/?{qs}")
+        return self.get_files(url)
 
-    def get_uploadedfiles(self, url: str) -> UploadedFiles:
-        return UploadedFiles(url=url, session=self._s)
+    def get_files(self, url: CUBEUrl) -> ListOfDownloadableFiles:
+        return ListOfDownloadableFiles(url=url, s=self.s)
 
-    def search_pipelines(self, name='') -> Set[Pipeline]:
-        payload = {
-            'name': name
-        }
-        res = self._s.get(self.collection_links['pipelines'] + 'search/', params=payload)
+    def search_pipelines(self, name='') -> Generator[RegisteredPipeline, None, None]:
+        return self.fetch_paginated_objects(
+            url=CUBEUrl(f"{self.collection_links['pipelines']}search/?name={name}"),
+            constructor=RegisteredPipeline
+        )
+
+    def get_pipeline(self, name: str) -> RegisteredPipeline:
+        return peek(self.search_pipelines(name), mt=PipelineNotFoundError)
+
+    def get_username(self) -> CUBEUsername:
+        res = self.s.get(url=self.collection_links['user'])
         res.raise_for_status()
         data = res.json()
-        return set(Pipeline(**p, session=self._s) for p in data['results'])
+        return CUBEUsername(data['username'])
 
-    def get_pipeline(self, name: str) -> Pipeline:
-        search = self.search_pipelines(name)
-        if not search:
-            raise PipelineNotFoundError(name)
-        return search.pop()
+    @staticmethod
+    def _join_qs(**kwargs) -> str:
+        return '&'.join([f'{k}={v}' for k, v in kwargs.items() if v])
