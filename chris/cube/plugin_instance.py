@@ -10,7 +10,7 @@ from chris.types import (
     SwiftPath, ISOFormatDateString, PluginInstanceStatus, CUBEErrorCode
 )
 
-
+# It'd be better to use inheritance instead of optionals
 @dataclass(frozen=True)
 class PluginInstance(CUBEResource):
     """
@@ -55,6 +55,18 @@ class PluginInstance(CUBEResource):
     """
     FS plugins will not produce a ``previous_id`` value
     (even though they will return ``"previous": null``)
+    """
+
+    size: Optional[int] = None
+    """
+    IDK what it is the size of.
+    
+    This field shows up when the plugin instance is maybe done,
+    but not when the plugin instance is created.
+    """
+    template: Optional[dict] = None
+    """
+    Present only when getting a plugin instance.
     """
 
     def get_feed(self) -> Feed:
