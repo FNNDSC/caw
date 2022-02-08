@@ -38,7 +38,7 @@ docker run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload
 podman run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
 ```
 
-Constainer isolation can make usage finicky.
+Container isolation can make usage finicky.
 Volumes must be mounted for the container to read data which exists on the host filesystem.
 If the _ChRIS_ backend is on a private network, the `--net=host` option might be necessary to resolve
 the server's hostname.
@@ -155,6 +155,23 @@ $ caw upload --name 'In-utero study' \
     data/T2_*.nii
 ```
 
+###### Piping
+
+If a feed is successfully created from an upload, `caw` will print out the created feed's URL.
+
+`caw` is feature-incomplete and common use cases will require light understanding
+of the CUBE API and the combination of `caw` with other tools such as `curl ... | jq ...`.
+
+For example, to get the URL of created _plugin instances_ following a `caw upload`:
+
+```shell
+caw upload file.dat \
+  | xargs curl -fsu 'chris:chris1234' -H 'accept:application/json' \
+  | jq -r '.plugin_instances' \
+  | xargs curl -fsu 'chris:chris1234' -H 'accept:application/json' \
+  | jq -r '.results[] | .url'
+```
+
 #### `caw download`
 
 Download files from _ChRIS_.
@@ -217,3 +234,12 @@ docker build -t caw .
 docker run --rm --net=host --userns=host \
        -e CAW_TEST_FULL=y caw pytest
 ```
+
+## Roadmap
+
+Bugs will be fixed, but new features will not be added.
+
+For the next-generation _ChRIS_ client, see
+[chrs](https://github.com/FNNDSC/chrs),
+and how it compares to `caw`:
+https://github.com/FNNDSC/chrs/wiki/Feature-Table
