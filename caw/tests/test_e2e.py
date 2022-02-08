@@ -104,9 +104,11 @@ class TestEndToEnd(unittest.TestCase):
         feed_url = sp.check_output(['caw', 'upload', '--pipeline', 'Example branching pipeline', '--', f.name],
                                    text=True).rstrip('\n')
         self.assertTrue(feed_url.startswith(address),
-                        msg='Feed URL was not correctly printed after `caw upload`')
+                        msg='Feed URL was not correctly printed after `caw upload`.\n'
+                            f'output = "{feed_url}", expected to start with "{address}"')
         self.assertTrue(feed_url.endswith('/'),
-                        msg='Feed URL was not correctly printed after `caw upload`')
+                        msg='Feed URL was not correctly printed after `caw upload`.\n'
+                            f'output = {feed_url}')
         feed_data = poll_feed(feed_url, jobs_count=9)
 
         with TemporaryDirectory() as tmpdir:
