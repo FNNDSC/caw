@@ -1,4 +1,5 @@
 import os
+import sys
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 from typing import List, Tuple, Union
@@ -37,7 +38,7 @@ def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_thre
         typer.secho(f'No input files specified.', fg=typer.colors.RED, err=True)
         raise typer.Abort()
 
-    with typer.progressbar(label='Uploading files', length=len(input_files)) as bar:
+    with typer.progressbar(label='Uploading files', length=len(input_files), file=sys.stderr) as bar:
         def upload_file(input_file: str):
             client.upload(Path(input_file), Path(upload_folder))
             bar.update(1)
@@ -83,10 +84,10 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
         return target, remote_file
 
     search = tuple(client.get_files(url))
-    with typer.progressbar(search, length=len(search), label='Getting information') as progress:
+    with typer.progressbar(search, length=len(search), label='Getting information', file=sys.stderr) as progress:
         to_download = frozenset(__calculate_target(remote_file) for remote_file in progress)
 
-    with typer.progressbar(length=len(to_download), label='Downloading files') as progress:
+    with typer.progressbar(length=len(to_download), label='Downloading files', file=sys.stderr) as progress:
         def download_file(t: Tuple[Path, DownloadableFile]) -> int:
             """
             Download file and move the progress bar

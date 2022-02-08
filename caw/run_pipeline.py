@@ -1,3 +1,4 @@
+import sys
 import typer
 
 from chris.cube.pipeline import Pipeline
@@ -10,6 +11,7 @@ def run_pipeline_with_progress(chris_pipeline: Pipeline, plugin_instance: Plugin
     """
     plugin_root = chris_pipeline.get_root()
     with typer.progressbar(plugin_root.run(plugin_instance.id),
-                           length=len(plugin_root), label='Scheduling pipeline') as proto_pipeline:
+                           length=len(plugin_root), label='Scheduling pipeline',
+                           file=sys.stderr) as proto_pipeline:
         for _ in proto_pipeline:
             pass
