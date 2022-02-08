@@ -95,7 +95,7 @@ class LoginManager:
         self.__savefile.write_text(f'{{"version": "{self.VERSION}"}}')
 
     def get_default_address(self, address: Optional[CUBEAddress] = None) -> Optional[CUBEAddress]:
-        if address:
+        if address is not None:
             return address
         if 'defaultAddress' not in self._config:
             return None

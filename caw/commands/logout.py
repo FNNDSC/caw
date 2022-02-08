@@ -1,3 +1,5 @@
+import typer
+
 from caw.commands.store import app, build_client, login_manager
 from caw.constants import DEFAULT_ADDRESS
 
@@ -7,7 +9,8 @@ def logout():
     """
     Remove your login credentials.
     """
-    if build_client.address == DEFAULT_ADDRESS:
-        login_manager.logout()
+    addr = None if build_client.address == DEFAULT_ADDRESS else build_client.address
+    if login_manager.get(addr) is None:
+        typer.echo('Not logged in.', err=True)
     else:
-        login_manager.logout(build_client.address)
+        login_manager.logout(addr)
