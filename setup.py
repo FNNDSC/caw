@@ -15,7 +15,7 @@ setup(
     description='ChRIS Automatic Workflows',
     long_description=readme,
     long_description_content_type='text/markdown',
-    python_requires='>=3.8',
+    python_requires='>=3.8.2',
     install_requires=['requests', 'typer', 'shellingham', 'packaging'],
     entry_points={
         'console_scripts': [
