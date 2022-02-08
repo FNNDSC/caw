@@ -208,8 +208,6 @@ pip install -e .
 
 ### Testing
 
-TODO instructions for Pytest.
-
 First, set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
 (say, using [_miniChRIS_](https://github.com/FNNDSC/miniChRIS)).
 
@@ -218,6 +216,12 @@ Next, install the example pipeline.
 ```shell
 ./examples/dummy_pipeline.sh
 ./examples/upload_reconstruction_pipeline.sh
+```
+
+Install testing dependencies:
+
+```shell
+pip install pytest pytest_mock
 ```
 
 Run all tests using the command
@@ -230,9 +234,9 @@ The end-to-end test is disabled by default because it will create a _ChRIS_ acco
 affect `caw` user settings. It is recommended to run it in a container instead.
 
 ```shell
-docker build -t caw .
-docker run --rm --net=host --userns=host \
-       -e CAW_TEST_FULL=y caw pytest
+docker build -t caw -f Dockerfile.dev .
+docker run --rm --net=host --userns=host -v $PWD:/usr/local/src/caw:ro \
+       -t -e CAW_TEST_FULL=y caw
 ```
 
 ## Roadmap
