@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Generator, Sequence, Optional
+from typing import Generator, Sequence, Optional, List, Dict
 import requests
 from chris.cube.resource import CUBEResource
 from chris.cube.pagination import fetch_paginated_objects
@@ -69,8 +69,8 @@ class MutablePluginTreeNode:
     """
     s: requests.Session
     piping: Piping
-    params: dict[ParameterName, ParameterType] = field(default_factory=dict)
-    children: list['MutablePluginTreeNode'] = field(default_factory=list)
+    params: Dict[ParameterName, ParameterType] = field(default_factory=dict)
+    children: List['MutablePluginTreeNode'] = field(default_factory=list)
 
     def freeze(self) -> PluginTree:
         """
@@ -100,8 +100,8 @@ class RegisteredPipeline(CUBEResource, Pipeline):
         return list(fetch_paginated_objects(s=self.s, url=self.default_parameters, constructor=PipingParameter))
 
     @staticmethod
-    def map_parameters(params: Sequence[PipingParameter]) -> dict[PipingId, dict[ParameterName, ParameterType]]:
-        assembled_params: dict[PipingId, dict[ParameterName, ParameterType]] = {
+    def map_parameters(params: Sequence[PipingParameter]) -> Dict[PipingId, Dict[ParameterName, ParameterType]]:
+        assembled_params: Dict[PipingId, Dict[ParameterName, ParameterType]] = {
             p.plugin_piping_id: {} for p in params
         }
         for p in params:
@@ -117,7 +117,7 @@ class RegisteredPipeline(CUBEResource, Pipeline):
         """
         # collect all default parameters
         assembled_params = self.map_parameters(self.get_default_parameters())
-        pipings_map: dict[PipingId, MutablePluginTreeNode] = {}
+        pipings_map: Dict[PipingId, MutablePluginTreeNode] = {}
         root: Optional[MutablePluginTreeNode] = None
 
         # create DAG nodes

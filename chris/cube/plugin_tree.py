@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Generator, Collection
+from typing import Generator, Collection, Dict, Tuple
 from collections import deque
 from chris.types import CUBEUrl, ParameterType, PluginInstanceId
 from chris.cube.plugin import Plugin
@@ -18,8 +18,8 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
     """
 
     plugin: CUBEUrl
-    default_parameters: dict[str, ParameterType]
-    children: tuple['PluginTree', ...] = field(default_factory=tuple)
+    default_parameters: Dict[str, ParameterType]
+    children: Tuple['PluginTree', ...] = field(default_factory=tuple)
     # tuple instead of frozenset because PluginTree.default_parameters
     # is a dict, which is not hashable
 

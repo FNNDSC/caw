@@ -5,6 +5,8 @@ from chris.types import CUBEUrl, FeedId, ISOFormatDateString, CUBEUsername, File
 from chris.helpers.collection import collection_helper
 from chris.cube.resource.templated_resource import ResourceWithTemplate
 
+from typing import List
+
 
 @dataclass(frozen=True)
 class Feed(ResourceWithTemplate):
@@ -24,7 +26,7 @@ class Feed(ResourceWithTemplate):
     finished_jobs: int
     errored_jobs: int
     cancelled_jobs: int
-    owner: list[CUBEUrl]
+    owner: List[CUBEUrl]
     note: CUBEUrl
     tags: CUBEUrl
     taggings: CUBEUrl

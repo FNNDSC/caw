@@ -1,5 +1,5 @@
 import json
-from typing import Generator, Any, TypedDict, Callable, TypeVar
+from typing import Generator, Any, TypedDict, Callable, TypeVar, List, Dict
 
 import requests
 
@@ -26,7 +26,7 @@ class JSONPaginatedResponse(TypedDict):
     count: int
     next: CUBEUrl
     previous: CUBEUrl
-    results: list[dict[str, Any]]
+    results: List[Dict[str, Any]]
 
 
 def fetch_paginated_objects(s: requests.Session,
@@ -40,7 +40,7 @@ def fetch_paginated_objects(s: requests.Session,
 
 def fetch_paginated_raw(s: requests.Session,
                         url: CUBEUrl, max_requests: int
-                        ) -> Generator[dict[str, any], None, None]:
+                        ) -> Generator[Dict[str, any], None, None]:
     """
     Produce all values from a paginated endpoint.
 
@@ -68,7 +68,7 @@ __PaginatedResponseKeys = frozenset(JSONPaginatedResponse.__annotations__)
 
 # TODO in Python 3.10, we should use TypeGuard
 # https://docs.python.org/3.10/library/typing.html#typing.TypeGuard
-def __get_results_from(url: CUBEUrl, data: Any) -> list[dict[str, Any]]:
+def __get_results_from(url: CUBEUrl, data: Any) -> List[Dict[str, Any]]:
     """
     Check that the response from a paginated endpoint is well-formed,
     and return the results.

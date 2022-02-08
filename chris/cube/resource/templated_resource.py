@@ -1,5 +1,5 @@
 import abc
-from typing import TypedDict
+from typing import TypedDict, List
 from dataclasses import dataclass, InitVar
 from chris.cube.resource.cube_resource import CUBEResource
 
@@ -10,7 +10,7 @@ class CollectionEntry(TypedDict):
 
 
 class Template(TypedDict):
-    data: list[CollectionEntry]
+    data: List[CollectionEntry]
 
 
 @dataclass(frozen=True)

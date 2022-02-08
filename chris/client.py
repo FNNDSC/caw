@@ -1,7 +1,7 @@
 from pathlib import Path
 from dataclasses import dataclass, field
 import requests
-from typing import Optional, Union, Generator
+from typing import Optional, Union, Generator, Dict
 
 from chris.types import (
     CUBEAddress, CUBEToken, CUBEUsername, CUBEPassword, CUBEUrl, PluginInstanceId, PluginName, PluginVersion
@@ -28,7 +28,7 @@ class ChrisClient(ConnectedResource):
     address: CUBEAddress
     token: CUBEToken
 
-    collection_links: dict[str, CUBEUrl] = field(init=False)
+    collection_links: Dict[str, CUBEUrl] = field(init=False)
     s: requests.Session = field(init=False)
     url: CUBEUrl = field(init=False)
     """
@@ -69,7 +69,7 @@ class ChrisClient(ConnectedResource):
         })
         return s
 
-    def __get_collection_links(self) -> dict[str, CUBEUrl]:
+    def __get_collection_links(self) -> Dict[str, CUBEUrl]:
         """
         Make a request to the CUBE address. Calling this method verifies
         that the login token is correct.
