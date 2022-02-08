@@ -19,18 +19,23 @@ def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_thre
     else:
         upload_folder = f'{username}/uploads/{datetime.datetime.now().isoformat()}/'
 
-    input_files = []
-    for mri in files:
-        if mri.is_file():
-            input_files.append(mri)
-        elif mri.is_dir():
-            if len(files) != 1:
-                typer.secho(f'WARNING: contents of {mri} will be uploaded to the top-level, '
-                            'i.e. directory structure is not preserved.', dim=True, err=True)
-            input_files += [f.absolute().name for f in mri.rglob('*')]
+    input_files: List[Path] = []
+    for path in files:
+        if path.is_file():
+            input_files.append(path)
+        elif path.is_dir():
+            nested_files = [f for f in path.rglob('**/*') if f.is_file()]
+            if len(nested_files) > 0:
+                input_files.extend(nested_files)
+            else:
+                typer.secho(f'WARNING: input directory is empty: {path}', dim=True, err=True)
         else:
-            typer.secho(f'No such file or directory: {mri}', fg=typer.colors.RED, err=True)
+            typer.secho(f'No such file or directory: {path}', fg=typer.colors.RED, err=True)
             raise typer.Abort()
+
+    if len(input_files) == 0:
+        typer.secho(f'No input files specified.', fg=typer.colors.RED, err=True)
+        raise typer.Abort()
 
     with typer.progressbar(label='Uploading files', length=len(input_files)) as bar:
         def upload_file(input_file: str):
