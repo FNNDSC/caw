@@ -10,6 +10,7 @@ from chris.types import (
     SwiftPath, ISOFormatDateString, PluginInstanceStatus, CUBEErrorCode
 )
 
+
 # It'd be better to use inheritance instead of optionals
 @dataclass(frozen=True)
 class PluginInstance(CUBEResource):
@@ -70,8 +71,10 @@ class PluginInstance(CUBEResource):
     """
 
     def get_feed(self) -> Feed:
-        res = self.s.get(self.url).json()
-        return Feed(s=self.s, **res)
+        inst_res = self.s.get(self.url).json()
+        feed_url = inst_res['feed']
+        feed_res = self.s.get(feed_url).json()
+        return Feed(s=self.s, **feed_res)
 
     def get_start_date(self) -> datetime:
         return datetime.fromisoformat(self.start_date)
