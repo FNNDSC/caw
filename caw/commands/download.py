@@ -20,7 +20,7 @@ def download(
     Download everything from a ChRIS url.
     """
     base_address = api_address(CUBEUrl(url))
-    if base_address != build_client.address:
+    if build_client.address is not None and base_address != build_client.address:
         if build_client.address != DEFAULT_ADDRESS:
             given_address = typer.style(f'--address={build_client.address}',
                                         fg=typer.colors.GREEN, bold=True)
