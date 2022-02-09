@@ -20,7 +20,7 @@ def show_version(value: bool):
 # noinspection PyUnusedLocal
 @app.callback()
 def entry(
-        address: str = typer.Option(DEFAULT_ADDRESS, '--address', '-a', envvar='CHRIS_URL'),
+        address: str = typer.Option(None, '--address', '-a', envvar='CHRIS_URL'),
         username: Optional[str] = typer.Option(
             None, '--username', '-u', envvar='CHRIS_USERNAME',
             help='Username of your ChRIS user account.'),
