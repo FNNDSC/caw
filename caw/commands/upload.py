@@ -28,7 +28,7 @@ def upload(
         pipeline_name: str = typer.Option('', '--pipeline', '-p', help='Name of pipeline to run on the data.'),
         what_output: OutputSelection = typer.Option(OutputSelection.feed, '--output',
                                                     help='What to print out: either URL of feed, or URLs of '
-                                                         'pipeline instances.'),
+                                                         'pipeline plugin instances.'),
         files: List[Path] = typer.Argument(..., help='Files to upload. '
                                                      'Folder upload is supported, but directories are destructured.')
 ):
