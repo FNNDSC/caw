@@ -157,20 +157,16 @@ $ caw upload --name 'In-utero study' \
 
 ###### Piping
 
-If a feed is successfully created from an upload, `caw` will print out the created feed's URL.
+The commands `caw upload` and `caw pipeline` print out the URLs of
+the resources that they create. Advanced users might pipe the output
+of `caw` to other commands such as
+[`xh`](https://github.com/ducaale/xh) and [`jq`](https://stedolan.github.io/jq/).
 
-`caw` is feature-incomplete and common use cases will require light understanding
-of the CUBE API and the combination of `caw` with other tools such as `curl ... | jq ...`.
+`caw pipeline` prints out the plugin instances it creates.
 
-For example, to get the URL of created _plugin instances_ following a `caw upload`:
-
-```shell
-caw upload file.dat \
-  | xargs curl -fsu 'chris:chris1234' -H 'accept:application/json' \
-  | jq -r '.plugin_instances' \
-  | xargs curl -fsu 'chris:chris1234' -H 'accept:application/json' \
-  | jq -r '.results[] | .url'
-```
+`caw upload` prints out the feed it creates. Alternatively, the option
+`caw upload --output plugininstances` tells `caw upload` to print out
+the plugin instances it creates instead, similar to be behavior of `caw pipeline`.
 
 #### `caw download`
 

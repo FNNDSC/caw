@@ -9,8 +9,14 @@ from chris.cube.pipeline import Pipeline
 from caw.commands.store import app, build_client
 from caw.movedata import upload as cube_upload
 from caw.run_pipeline import run_pipeline_with_progress
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+class OutputSelection(str, Enum):
+    feed = 'feed'
+    plugininstances = 'plugininstances'
 
 
 @app.command()
@@ -20,6 +26,9 @@ def upload(
         name: str = typer.Option('', '--name', '-n', help='Name of the feed.'),
         description: str = typer.Option('', '--description', '-d', help='Description of the feed.'),
         pipeline_name: str = typer.Option('', '--pipeline', '-p', help='Name of pipeline to run on the data.'),
+        what_output: OutputSelection = typer.Option(OutputSelection.feed, '--output',
+                                                    help='What to print out: either URL of feed, or URLs of '
+                                                         'pipeline instances.'),
         files: List[Path] = typer.Argument(..., help='Files to upload. '
                                                      'Folder upload is supported, but directories are destructured.')
 ):
@@ -48,5 +57,13 @@ def upload(
         dircopy_instance.get_feed().set_description(description)
 
     if chris_pipeline:
-        run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
-    typer.echo(dircopy_instance.feed)
+        child_plinst = run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
+    else:
+        child_plinst = tuple()
+
+    if what_output == OutputSelection.feed:
+        typer.echo(dircopy_instance.feed)
+    elif what_output == OutputSelection.plugininstances:
+        typer.echo(dircopy_instance.url)
+        for plugin_instance in child_plinst:
+            typer.echo(plugin_instance.url)

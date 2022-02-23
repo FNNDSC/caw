@@ -8,9 +8,11 @@ from caw.run_pipeline import run_pipeline_with_progress
 def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
              target: str = typer.Option(..., help='Plugin instance ID or URL.')):
     """
-    Run a pipeline on an existing feed.
+    Run a pipeline on an existing feed. The URLs of the created plugin instances are printed out.
     """
     client = build_client()
     plugin_instance = client.get_plugin_instance(target)
     chris_pipeline = client.get_pipeline(name)
-    run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance)
+
+    for p in run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance):
+        typer.echo(p.url)
