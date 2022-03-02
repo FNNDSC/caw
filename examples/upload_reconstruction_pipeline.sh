@@ -19,7 +19,7 @@ plugins=(
 # If using miniChRIS, we can handle it for you using docker exec
 
 CUBE_PORT="$(grep -Pom 1 '(?<=localhost:)[0-9].+(?=/api/v1/)' <<< "$CUBE_URL")"
-MINICHRIS_PORTS="$(docker ps --filter label=org.chrisproject.info=miniChRIS --format '{{ .Ports }}')"
+MINICHRIS_PORTS="$(docker ps --filter label=org.chrisproject.miniChRIS=miniChRIS --format '{{ .Ports }}')"
 
 set -e
 
