@@ -57,7 +57,7 @@ def upload(
         dircopy_instance.get_feed().set_description(description)
 
     if chris_pipeline:
-        child_plinst = run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=dircopy_instance)
+        child_plinst = run_pipeline_with_progress(chris_pipeline=chris_pipeline, parent=dircopy_instance)
     else:
         child_plinst = tuple()
 

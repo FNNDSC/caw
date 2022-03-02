@@ -7,6 +7,7 @@ CUBEPassword = NewType('CUBEPassword', str)
 
 CUBEUrl = NewType('CUBEUrl', str)
 
+PluginUrl = NewType('PluginUrl', str)
 PluginId = NewType('PluginId', int)
 PluginName = NewType('PluginName', str)
 PluginVersion = NewType('PluginVersion', str)
@@ -44,3 +45,5 @@ ComputeResourceName = NewType('ComputeResourceName', str)
 FileResourceName = NewType('FileResourceName', str)
 FileResourceUrl = NewType('FileResourceUrl', str)
 FileId = NewType('FileId', int)
+
+PipingUrl = NewType('PipingUrl', str)

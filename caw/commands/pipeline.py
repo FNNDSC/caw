@@ -14,5 +14,5 @@ def pipeline(name: str = typer.Argument(..., help='Name of pipeline to run.'),
     plugin_instance = client.get_plugin_instance(target)
     chris_pipeline = client.get_pipeline(name)
 
-    for p in run_pipeline_with_progress(chris_pipeline=chris_pipeline, plugin_instance=plugin_instance):
+    for p in run_pipeline_with_progress(chris_pipeline=chris_pipeline, parent=plugin_instance):
         typer.echo(p.url)

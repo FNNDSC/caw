@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from typing import Generator, Collection, Dict, Tuple
 from collections import deque
-from chris.types import CUBEUrl, ParameterType, PluginInstanceId
+from chris.types import ParameterType, PluginInstanceId
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
 from chris.cube.resource import ConnectedResource
+from chris.cube.piping import Piping
 
 
 @dataclass(frozen=True)
@@ -12,28 +13,31 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
     """
     A ``PluginTree`` is an immutable node of a directed acyclic graph
     of plugins and default parameters for each plugin.
-    It usually represents a runnable pipeline.
+    It usually represents a piping, its associated plugin, and
+    default parameters of a runnable *ChRIS* pipeline.
 
     CONSTRAINT: all plugins must be associated with the same CUBE.
     """
 
-    plugin: CUBEUrl
+    piping: Piping
     default_parameters: Dict[str, ParameterType]
     children: Tuple['PluginTree', ...] = field(default_factory=tuple)
     # tuple instead of frozenset because PluginTree.default_parameters
     # is a dict, which is not hashable
 
     def get_plugin(self) -> Plugin:
-        res = self.s.get(self.plugin)
+        res = self.s.get(self.piping.plugin)
         res.raise_for_status()
         return Plugin(s=self.s, **res.json())
 
     def run(self, plugin_instance_id: PluginInstanceId
-            ) -> Generator[PluginInstance, None, None]:
+            ) -> Generator[Tuple[PluginInstance, 'PluginTree'], None, None]:
         """
         Create plugin instances in DFS-order.
         The returned iterator must be iterated through to
         schedule this entire plugin tree.
+        It produces 2-tuples of the created ``PluginInstance``
+        and the ``PluginTree`` from which the instance was created.
 
         :param plugin_instance_id: parent plugin instance
         """
@@ -42,7 +46,7 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
         }
         params.update(self.default_parameters)
         created_instance = self.get_plugin().create_instance(params)
-        yield created_instance
+        yield created_instance, self
         for child in self.children:
             yield from child.run(created_instance.id)
 

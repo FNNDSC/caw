@@ -1,16 +1,16 @@
 from dataclasses import dataclass, field
 from typing import Generator, Sequence, Optional, List, Dict
+
 import requests
-from chris.cube.resource import CUBEResource
+
 from chris.cube.pagination import fetch_paginated_objects
 from chris.cube.pipeline import Pipeline
+from chris.cube.piping import PipingParameter, Piping
 from chris.cube.plugin_tree import PluginTree
-
+from chris.cube.resource import CUBEResource
 from chris.types import (
     CUBEUrl, PipelineId, CUBEUsername, ISOFormatDateString,
-    ParameterName, ParameterType, ParameterTypeName, PipingId,
-    PipelineParameterId, PluginParameterId,
-    PluginName, PluginVersion, PluginId
+    ParameterName, ParameterType, PipingId
 )
 
 
@@ -35,42 +35,15 @@ class PipelineRootNotFoundException(PipelineAssemblyException):
     pass
 
 
-@dataclass(frozen=True)
-class PipingParameter(CUBEResource):
-    id: PipelineParameterId
-    value: ParameterType
-    type: ParameterTypeName
-    plugin_piping_id: PipingId
-    previous_plugin_piping_id: None
-    param_name: ParameterName
-    param_id: PluginParameterId
-    plugin_piping: CUBEUrl
-    plugin_name: PluginName
-    plugin_version: PluginVersion
-    plugin_id: PluginId
-    plugin_param: CUBEUrl
-
-
-@dataclass(frozen=True)
-class Piping(CUBEResource):
-    id: PipingId
-    plugin_id: PluginId
-    pipeline_id: PipelineId
-    previous: CUBEUrl
-    plugin: CUBEUrl
-    pipeline: CUBEUrl
-    previous_id: Optional[PipingId] = None
-
-
 @dataclass
-class MutablePluginTreeNode:
+class _MutablePluginTreeNode:
     """
     A mutable predecessor to :class:`PluginTree`.
     """
     s: requests.Session
     piping: Piping
     params: Dict[ParameterName, ParameterType] = field(default_factory=dict)
-    children: List['MutablePluginTreeNode'] = field(default_factory=list)
+    children: List['_MutablePluginTreeNode'] = field(default_factory=list)
 
     def freeze(self) -> PluginTree:
         """
@@ -78,7 +51,7 @@ class MutablePluginTreeNode:
         """
         return PluginTree(
             s=self.s,
-            plugin=self.piping.plugin,
+            piping=self.piping,
             default_parameters=self.params,
             children=tuple(n.freeze() for n in self.children)
         )
@@ -117,14 +90,14 @@ class RegisteredPipeline(CUBEResource, Pipeline):
         """
         # collect all default parameters
         assembled_params = self.map_parameters(self.get_default_parameters())
-        pipings_map: Dict[PipingId, MutablePluginTreeNode] = {}
-        root: Optional[MutablePluginTreeNode] = None
+        pipings_map: Dict[PipingId, _MutablePluginTreeNode] = {}
+        root: Optional[_MutablePluginTreeNode] = None
 
         # create DAG nodes
         for piping in self.get_pipings():
             params = assembled_params[piping.id] if piping.id in assembled_params else {}
 
-            node = MutablePluginTreeNode(piping=piping, params=params, s=self.s)
+            node = _MutablePluginTreeNode(piping=piping, params=params, s=self.s)
             pipings_map[piping.id] = node
 
             if piping.previous:
