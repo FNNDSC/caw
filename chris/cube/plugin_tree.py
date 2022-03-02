@@ -1,7 +1,9 @@
+import json
+from functools import cached_property
 from dataclasses import dataclass, field
-from typing import Generator, Collection, Dict, Tuple
+from typing import Generator, Collection, Dict, Tuple, Optional
 from collections import deque
-from chris.types import ParameterType, PluginInstanceId
+from chris.types import ParameterType, PluginInstanceId, PipingId
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
 from chris.cube.resource import ConnectedResource
@@ -79,6 +81,10 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
         return self.dfs()
 
     def __len__(self):
+        return self.length
+
+    @cached_property
+    def length(self) -> int:
         count = 0
         for _ in self:
             count += 1
@@ -86,3 +92,45 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
 
     def __contains__(self, __x: object) -> bool:
         return any(__x == e for e in self)
+
+    def deserialize(self) -> str:
+        """
+        Produce this Plugin Tree as JSON according to the ``plugin_tree`` schema
+        of the *ChRIS* pipeline spec.
+        """
+        return json.dumps(self.deserialize_tree())
+
+    def deserialize_tree(self) -> list:
+        data = []
+        index_map: dict[Optional[PipingId], Optional[int]] = {
+            None: None
+        }
+
+        for node in self.bfs():
+            index_map[node.piping.id] = len(data)
+            previous_index = index_map[node.piping.previous_id]
+            data.append(node.deserialize_node(previous_index))
+
+        return data
+
+    def deserialize_node(self, previous_index: Optional[int]) -> dict:
+        """
+        Deserialize just this ``PluginTree`` (and not its children).
+        """
+        plugin = self.get_plugin()
+        data = {
+            'plugin_name': plugin.name,
+            'plugin_version': plugin.version,
+            'previous_index': previous_index
+        }
+
+        if self.default_parameters:
+            data['plugin_parameter_defaults'] = [
+                {
+                    'name': name,
+                    'default': value
+                }
+                for name, value in self.default_parameters.items()
+            ]
+
+        return data

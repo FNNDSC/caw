@@ -194,6 +194,24 @@ wow
         └── e.txt
 ```
 
+#### `caw export`
+
+Export a registered pipeline to JSON.
+
+```shell
+caw export 'Automatic Fetal Brain Reconstruction Pipeline v1.0.0' > pipeline.json
+
+curl -u "chris:chris1234" "https://example.com/api/v1/pipelines/" \
+  -H 'Content-Type:application/vnd.collection+json' \
+  -H 'Accept:application/vnd.collection+json' \
+  --data "$(< pipeline.json)"
+```
+
+##### `caw export` Limitations
+
+- All plugin parameters will be exported as part of `plugin_parameter_defaults`
+- Order of lists, such as `plugin_tree` and `plugin_parameter_defaults`, may not be the same as the original
+
 ## Development
 
 ```shell
@@ -236,8 +254,6 @@ docker run --rm --net=host --userns=host -v $PWD:/usr/local/src/caw:ro \
 ```
 
 ## Roadmap
-
-Bugs will be fixed, but new features will not be added.
 
 For the next-generation _ChRIS_ client, see
 [chrs](https://github.com/FNNDSC/chrs),

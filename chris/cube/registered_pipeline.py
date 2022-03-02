@@ -60,7 +60,6 @@ class _MutablePluginTreeNode:
 @dataclass(frozen=True)
 class RegisteredPipeline(CUBEResource, Pipeline):
     id: PipelineId
-    locked: bool
     owner_username: CUBEUsername
     creation_date: ISOFormatDateString
     modification_date: ISOFormatDateString
