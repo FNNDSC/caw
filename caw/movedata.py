@@ -7,6 +7,7 @@ import typer
 from chris.client import ChrisClient
 from chris.cube.files import DownloadableFile
 from chris.types import CUBEUrl
+from chris.cube.pagination import TooMuchPaginationException, MAX_REQUESTS, REQUESTS_ENV_VAR_NAME
 import logging
 from pathlib import Path
 
@@ -83,15 +84,15 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
         os.makedirs(target.parent, exist_ok=True)
         return target, remote_file
 
-    search = tuple(client.get_files(url))
-    with typer.progressbar(search, length=len(search), label='Getting information', file=sys.stderr) as progress:
+    files_to_download = _discover_files_to_download(client, url)
+
+    with typer.progressbar(files_to_download, length=len(files_to_download), label='Getting information', file=sys.stderr) as progress:
         to_download = frozenset(__calculate_target(remote_file) for remote_file in progress)
 
     with typer.progressbar(length=len(to_download), label='Downloading files', file=sys.stderr) as progress:
         def download_file(t: Tuple[Path, DownloadableFile]) -> int:
             """
             Download file and move the progress bar
-            :param t: tuple
             :return: downloaded file size
             """
             target, remote_file = t
@@ -110,3 +111,26 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
     else:
         size = f'{total_size / 1e9:.4f} GB'
     typer.secho(size, fg=typer.colors.GREEN, err=True)
+
+
+def _discover_files_to_download(client: ChrisClient, url: CUBEUrl) -> Tuple[DownloadableFile, ...]:
+    typer.echo('Discovering files... ', nl=False)
+    total = 0
+
+    def report_discovered_file(f: DownloadableFile) -> DownloadableFile:
+        nonlocal total
+        total += 1
+        typer.echo(f'\rDiscovering files... {total}', nl=False)
+        return f
+
+    try:
+        search = tuple(report_discovered_file(f) for f in client.get_files(url))
+    except TooMuchPaginationException:
+        typer.echo(
+            f'Number of paginated requests exceeded {MAX_REQUESTS}.'
+            f"If you're trying to download many files, you can increase the limit:"
+            f'\n\n\t {" ".join([ "env", f"{REQUESTS_ENV_VAR_NAME}={MAX_REQUESTS + 99900}"] + sys.argv)}\n'
+        )
+        raise typer.Abort()
+    typer.echo(f'\rFound {total} files to download.')
+    return search

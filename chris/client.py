@@ -8,7 +8,7 @@ from chris.types import (
 )
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
-from chris.cube.files import ListOfDownloadableFiles
+from chris.cube.files import DownloadableFilesGenerator
 from chris.cube.registered_pipeline import RegisteredPipeline
 from chris.cube.pagination import fetch_paginated_objects
 from chris.cube.resource import ConnectedResource
@@ -178,13 +178,13 @@ class ChrisClient(ConnectedResource):
             plugin = self.get_plugin(name_exact=plugin_name, url=plugin_url)
         return plugin.create_instance(params)
 
-    def search_uploadedfiles(self, fname='', fname_exact='') -> ListOfDownloadableFiles:
+    def search_uploadedfiles(self, fname='', fname_exact='') -> DownloadableFilesGenerator:
         qs = self._join_qs(fname=fname, fname_exact=fname_exact)
         url = CUBEUrl(f"{self.collection_links['uploadedfiles']}search/?{qs}")
         return self.get_files(url)
 
-    def get_files(self, url: CUBEUrl) -> ListOfDownloadableFiles:
-        return ListOfDownloadableFiles(url=url, s=self.s)
+    def get_files(self, url: CUBEUrl) -> DownloadableFilesGenerator:
+        return DownloadableFilesGenerator(url=url, s=self.s)
 
     def search_pipelines(self, name='') -> Generator[RegisteredPipeline, None, None]:
         return fetch_paginated_objects(

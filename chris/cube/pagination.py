@@ -1,3 +1,5 @@
+import os
+import sys
 import json
 from typing import Generator, Any, TypedDict, Callable, TypeVar, List, Dict
 
@@ -9,6 +11,8 @@ from chris.types import CUBEUrl
 import logging
 
 logger = logging.getLogger(__name__)
+REQUESTS_ENV_VAR_NAME = 'CAW_PAGINATION_MAX_REQUESTS'
+MAX_REQUESTS = int(os.getenv(REQUESTS_ENV_VAR_NAME, 100))
 
 
 class UnrecognizedResponseException(Exception):
@@ -32,7 +36,7 @@ class JSONPaginatedResponse(TypedDict):
 def fetch_paginated_objects(s: requests.Session,
                             url: CUBEUrl,
                             constructor=Callable[..., T],
-                            max_requests=100
+                            max_requests=MAX_REQUESTS
                             ) -> Generator[T, None, None]:
     for d in fetch_paginated_raw(s, url, max_requests):
         yield constructor(s=s, **d)

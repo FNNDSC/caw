@@ -26,7 +26,7 @@ class DownloadableFile(CUBEResource):
 
 
 @dataclass(frozen=True)
-class ListOfDownloadableFiles(Iterable[DownloadableFile], CUBEResource):
+class DownloadableFilesGenerator(Iterable[DownloadableFile], CUBEResource):
     def __iter__(self) -> Generator[DownloadableFile, None, None]:
         return fetch_paginated_objects(s=self.s, url=self.url, constructor=self._construct_downloadable_file)
 
