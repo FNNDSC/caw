@@ -106,6 +106,12 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
                 except requests.exceptions.RequestException as e:
                     typer.secho(f'Failed to download {remote_file.file_resource}: {str(e)}',
                                 fg=typer.colors.RED, err=True)
+                    if sys.version_info.minor < 10:
+                        typer.secho(
+                            'This is probably a bug in Python itself. '
+                            'See https://github.com/FNNDSC/caw/issues/12',
+                            fg=typer.colors.YELLOW, err=True
+                        )
                     pool.shutdown(cancel_futures=True)  # fail fast
                     raise typer.Abort()
                 progress.update(1)
