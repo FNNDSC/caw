@@ -95,33 +95,19 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
     with typer.progressbar(length=len(to_download), label='Downloading files', file=sys.stderr) as progress:
         with ThreadPoolExecutor(max_workers=threads) as pool:
 
-            def download_file(t: Tuple[Path, DownloadableFile], attempt=0) -> int:
+            def download_file(t: Tuple[Path, DownloadableFile]) -> int:
                 """
-                Download file and move the progress bar. Retries on failure, shuts down the thread pool
-                if giving up.
-
+                Download file and move the progress bar
                 :return: downloaded file size
                 """
                 target, remote_file = t
-
-                if attempt >= 3:
-                    typer.secho(f'Failed 3 attempts to download {remote_file.file_resource}. '
-                                f'Giving up...', fg=typer.colors.RED, err=True)
-                    pool.shutdown(cancel_futures=True)  # fail fast
-                    raise typer.Abort()
-
                 try:
                     remote_file.download(target)
                 except requests.exceptions.RequestException as e:
-                    typer.secho(f'attempt={attempt} ::: '
-                                f'failed to download {remote_file.file_resource}: {str(e)}',
+                    typer.secho(f'Failed to download {remote_file.file_resource}: {str(e)}',
                                 fg=typer.colors.RED, err=True)
-                    return download_file(t, attempt + 1)
-
-                if attempt > 0:
-                    typer.secho(f'Successfully retried: {remote_file.file_resource}',
-                                color=typer.colors.GREEN, err=True)
-
+                    pool.shutdown(cancel_futures=True)  # fail fast
+                    raise typer.Abort()
                 progress.update(1)
                 return target.stat().st_size
 
