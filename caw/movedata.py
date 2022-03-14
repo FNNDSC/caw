@@ -1,15 +1,18 @@
+import datetime
+import logging
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
-import datetime
+from pathlib import Path
 from typing import List, Tuple, Union
+
+import requests
 import typer
+
 from chris.client import ChrisClient
 from chris.cube.files import DownloadableFile
-from chris.types import CUBEUrl
 from chris.cube.pagination import TooMuchPaginationException, MAX_REQUESTS, REQUESTS_ENV_VAR_NAME
-import logging
-from pathlib import Path
+from chris.types import CUBEUrl
 
 
 def upload(client: ChrisClient, files: List[Path], parent_folder='', upload_threads=4):
@@ -90,17 +93,24 @@ def download(client: ChrisClient, url: Union[str, CUBEUrl], destination: Path, t
         to_download = frozenset(__calculate_target(remote_file) for remote_file in progress)
 
     with typer.progressbar(length=len(to_download), label='Downloading files', file=sys.stderr) as progress:
-        def download_file(t: Tuple[Path, DownloadableFile]) -> int:
-            """
-            Download file and move the progress bar
-            :return: downloaded file size
-            """
-            target, remote_file = t
-            remote_file.download(target)
-            progress.update(1)
-            return target.stat().st_size
-
         with ThreadPoolExecutor(max_workers=threads) as pool:
+
+            def download_file(t: Tuple[Path, DownloadableFile]) -> int:
+                """
+                Download file and move the progress bar
+                :return: downloaded file size
+                """
+                target, remote_file = t
+                try:
+                    remote_file.download(target)
+                except requests.exceptions.RequestException as e:
+                    typer.secho(f'Failed to download {remote_file.file_resource}: {str(e)}',
+                                fg=typer.colors.RED, err=True)
+                    pool.shutdown(cancel_futures=True)  # fail fast
+                    raise typer.Abort()
+                progress.update(1)
+                return target.stat().st_size
+
             sizes = pool.map(download_file, to_download)
 
     total_size = sum(sizes)

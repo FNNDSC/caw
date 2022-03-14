@@ -6,7 +6,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 
 setup(
     name='caw',
-    version='0.6.1a1',
+    version='0.6.1a2',
     packages=find_packages(exclude=('*.tests',)),
     url='https://github.com/FNNDSC/caw',
     license='MIT',
