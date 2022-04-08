@@ -1,8 +1,9 @@
 # Python _ChRIS_ Client
 
-[![CI](https://github.com/FNNDSC/caw/actions/workflows/ci.yml/badge.svg)](https://github.com/FNNDSC/caw/actions)
 [![PyPI](https://img.shields.io/pypi/v/caw)](https://pypi.org/project/caw/)
 [![License - MIT](https://img.shields.io/pypi/l/caw)](https://github.com/FNNDSC/caw/blob/master/LICENSE)
+[![CI](https://github.com/FNNDSC/caw/actions/workflows/ci.yml/badge.svg)](https://github.com/FNNDSC/caw/actions)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A Python _ChRIS_ client library.
 
@@ -27,6 +28,13 @@ client.upload(Path("example.txt"), "my_examples")
 dircopy = client.get_plugin_by_name("pl-dircopy")
 plinst = dircopy.create_instance({"dir": "chris/uploads/my_examples/example.txt"})
 ```
+
+## Async
+
+Looking for an `async` _ChRIS_ client? Let us know!
+We have one implemented
+[here](https://github.com/FNNDSC/chrisomatic/tree/master/chris),
+though it's not published to PyPI.
 
 ## Command-Line Client
 
