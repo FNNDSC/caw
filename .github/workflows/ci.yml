@@ -41,6 +41,14 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install project
         run: poetry install --no-interaction
+      - name: Run ChRIS backend
+        uses: FNNDSC/miniChRIS-docker@20220330
+      - name: Create examples
+        run: |
+          ./examples/dummy_pipeline.sh
+          ./examples/upload_reconstruction_pipeline.sh
+      - name: Unit tests
+        run: poetry run pytest
 
   publish:
     runs-on: ubuntu-latest
