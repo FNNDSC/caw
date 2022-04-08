@@ -11,7 +11,7 @@ from chris.types import CUBEUrl
 import logging
 
 logger = logging.getLogger(__name__)
-REQUESTS_ENV_VAR_NAME = 'CAW_PAGINATION_MAX_REQUESTS'
+REQUESTS_ENV_VAR_NAME = "CAW_PAGINATION_MAX_REQUESTS"
 MAX_REQUESTS = int(os.getenv(REQUESTS_ENV_VAR_NAME, 100))
 
 
@@ -23,7 +23,7 @@ class TooMuchPaginationException(Exception):
     pass
 
 
-T = TypeVar('T', bound=CUBEResource)
+T = TypeVar("T", bound=CUBEResource)
 
 
 class JSONPaginatedResponse(TypedDict):
@@ -33,18 +33,19 @@ class JSONPaginatedResponse(TypedDict):
     results: List[Dict[str, Any]]
 
 
-def fetch_paginated_objects(s: requests.Session,
-                            url: CUBEUrl,
-                            constructor=Callable[..., T],
-                            max_requests=MAX_REQUESTS
-                            ) -> Generator[T, None, None]:
+def fetch_paginated_objects(
+    s: requests.Session,
+    url: CUBEUrl,
+    constructor=Callable[..., T],
+    max_requests=MAX_REQUESTS,
+) -> Generator[T, None, None]:
     for d in fetch_paginated_raw(s, url, max_requests):
         yield constructor(s=s, **d)
 
 
-def fetch_paginated_raw(s: requests.Session,
-                        url: CUBEUrl, max_requests: int
-                        ) -> Generator[Dict[str, any], None, None]:
+def fetch_paginated_raw(
+    s: requests.Session, url: CUBEUrl, max_requests: int
+) -> Generator[Dict[str, any], None, None]:
     """
     Produce all values from a paginated endpoint.
 
@@ -57,14 +58,14 @@ def fetch_paginated_raw(s: requests.Session,
     if max_requests <= 0:
         raise TooMuchPaginationException()
 
-    logger.debug('%s', url)
+    logger.debug("%s", url)
     res = s.get(url)  # TODO pass qs params separately?
     res.raise_for_status()
     data = res.json()
 
     yield from __get_results_from(url, data)
-    if data['next']:
-        yield from fetch_paginated_raw(s, data['next'], max_requests - 1)
+    if data["next"]:
+        yield from fetch_paginated_raw(s, data["next"], max_requests - 1)
 
 
 __PaginatedResponseKeys = frozenset(JSONPaginatedResponse.__annotations__)
@@ -78,20 +79,20 @@ def __get_results_from(url: CUBEUrl, data: Any) -> List[Dict[str, Any]]:
     and return the results.
     """
     if not isinstance(data, dict):
-        logging.debug('Invalid response from %s\n'
-                      'Was not parsed correctly into a dict.\n'
-                      '%s',
-                      url,
-                      json.dumps(data, indent=4))
-        raise UnrecognizedResponseException(f'Response from {url} is invalid.')
+        logging.debug(
+            "Invalid response from %s\n" "Was not parsed correctly into a dict.\n" "%s",
+            url,
+            json.dumps(data, indent=4),
+        )
+        raise UnrecognizedResponseException(f"Response from {url} is invalid.")
 
     if __PaginatedResponseKeys > frozenset(data.keys()):
-        logging.debug('Invalid response from %s\n'
-                      'dict keys did not match: %s\n'
-                      '%s',
-                      url,
-                      str(__PaginatedResponseKeys),
-                      json.dumps(data, indent=4))
-        raise UnrecognizedResponseException(f'Response from {url} is invalid.')
+        logging.debug(
+            "Invalid response from %s\n" "dict keys did not match: %s\n" "%s",
+            url,
+            str(__PaginatedResponseKeys),
+            json.dumps(data, indent=4),
+        )
+        raise UnrecognizedResponseException(f"Response from {url} is invalid.")
 
-    return data['results']
+    return data["results"]

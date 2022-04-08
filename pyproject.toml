@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "caw"
+version = "0.7.0"
+description = "ChRIS client library"
+authors = ["FNNDSC <dev@babyMRI.org>"]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+readme = "README.md"
+
+homepage = "https://chrisproject.org"
+repository = "https://github.com/FNNDSC/caw"
+documentation = "https://fnndsc.github.io/caw"
+
+[tool.poetry.dependencies]
+python = ">=3.8.2,<4.0.0"
+requests = "^2.27.1"
+pyserde = "^0.7.1"
+typer = {version = "^0.4.1", optional = true}
+click = {version = "^8.1.2", optional = true}
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.1"
+pre-commit = "^2.18.1"
+pdoc = "^11.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

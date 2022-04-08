@@ -18,9 +18,9 @@ class DownloadableFile(CUBEResource):
     fname: FileResourceName
 
     def download(self, destination: Path, chunk_size=8192):
-        with self.s.get(self.file_resource, stream=True, headers={'Accept': None}) as r:
+        with self.s.get(self.file_resource, stream=True, headers={"Accept": None}) as r:
             r.raise_for_status()
-            with destination.open('wb') as f:
+            with destination.open("wb") as f:
                 for chunk in r.iter_content(chunk_size=chunk_size):
                     f.write(chunk)
 
@@ -28,10 +28,15 @@ class DownloadableFile(CUBEResource):
 @dataclass(frozen=True)
 class DownloadableFilesGenerator(Iterable[DownloadableFile], CUBEResource):
     def __iter__(self) -> Generator[DownloadableFile, None, None]:
-        return fetch_paginated_objects(s=self.s, url=self.url, constructor=self._construct_downloadable_file)
+        return fetch_paginated_objects(
+            s=self.s, url=self.url, constructor=self._construct_downloadable_file
+        )
 
     @staticmethod
     def _construct_downloadable_file(s: requests.Session, **kwargs):
-        return DownloadableFile(s=s, url=kwargs['url'],
-                                fname=kwargs['fname'],
-                                file_resource=kwargs['file_resource'])
+        return DownloadableFile(
+            s=s,
+            url=kwargs["url"],
+            fname=kwargs["fname"],
+            file_resource=kwargs["file_resource"],
+        )

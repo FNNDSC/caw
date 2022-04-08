@@ -5,9 +5,19 @@ from datetime import datetime
 from chris.cube.resource.cube_resource import CUBEResource
 from chris.cube.feed import Feed
 from chris.types import (
-    CUBEUsername, CUBEUrl, PluginName, PluginVersion, PluginType,
-    PluginInstanceId, FeedId, PluginId, ComputeResourceName,
-    SwiftPath, ISOFormatDateString, PluginInstanceStatus, CUBEErrorCode
+    CUBEUsername,
+    CUBEUrl,
+    PluginName,
+    PluginVersion,
+    PluginType,
+    PluginInstanceId,
+    FeedId,
+    PluginId,
+    ComputeResourceName,
+    SwiftPath,
+    ISOFormatDateString,
+    PluginInstanceStatus,
+    CUBEErrorCode,
 )
 
 
@@ -18,6 +28,7 @@ class PluginInstance(CUBEResource):
     A *plugin instance* in _ChRIS_ is a computing job, i.e. an attempt to run
     a computation (a non-interactive command-line app) to produce data.
     """
+
     id: Optional[PluginInstanceId]
     title: str
     compute_resource_name: ComputeResourceName
@@ -72,7 +83,7 @@ class PluginInstance(CUBEResource):
 
     def get_feed(self) -> Feed:
         inst_res = self.s.get(self.url).json()
-        feed_url = inst_res['feed']
+        feed_url = inst_res["feed"]
         feed_res = self.s.get(feed_url).json()
         return Feed(s=self.s, **feed_res)
 

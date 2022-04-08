@@ -1,57 +1,28 @@
 # TODO got lazy...
 
 data = {
-    'https://example.com/api/v1/plugins/4/': {},
-
-    'https://example.com/api/v1/plugins/5/': {},
-
-    'https://example.com/api/v1/plugins/6/': {},
-
-    'https://example.com/api/v1/pipelines/': {
-        "collection_links": {
-            "plugins": "https://example.com/api/v1/plugins/"
-        },
+    "https://example.com/api/v1/plugins/4/": {},
+    "https://example.com/api/v1/plugins/5/": {},
+    "https://example.com/api/v1/plugins/6/": {},
+    "https://example.com/api/v1/pipelines/": {
+        "collection_links": {"plugins": "https://example.com/api/v1/plugins/"},
         "count": 2,
         "next": None,
         "previous": None,
         "queries": [
             {
                 "data": [
-                    {
-                        "name": "id",
-                        "value": ""
-                    },
-                    {
-                        "name": "owner_username",
-                        "value": ""
-                    },
-                    {
-                        "name": "name",
-                        "value": ""
-                    },
-                    {
-                        "name": "category",
-                        "value": ""
-                    },
-                    {
-                        "name": "description",
-                        "value": ""
-                    },
-                    {
-                        "name": "authors",
-                        "value": ""
-                    },
-                    {
-                        "name": "min_creation_date",
-                        "value": ""
-                    },
-                    {
-                        "name": "max_creation_date",
-                        "value": ""
-                    }
+                    {"name": "id", "value": ""},
+                    {"name": "owner_username", "value": ""},
+                    {"name": "name", "value": ""},
+                    {"name": "category", "value": ""},
+                    {"name": "description", "value": ""},
+                    {"name": "authors", "value": ""},
+                    {"name": "min_creation_date", "value": ""},
+                    {"name": "max_creation_date", "value": ""},
                 ],
                 "href": "https://example.com/api/v1/pipelines/search/",
-                "rel": "search"
+                "rel": "search",
             }
         ],
         "results": [
@@ -69,7 +40,7 @@ data = {
                 "owner_username": "chris",
                 "plugin_pipings": "https://example.com/api/v1/pipelines/1/pipings/",
                 "plugins": "https://example.com/api/v1/pipelines/1/plugins/",
-                "url": "https://example.com/api/v1/pipelines/1/"
+                "url": "https://example.com/api/v1/pipelines/1/",
             },
             {
                 "authors": "Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>",
@@ -85,44 +56,22 @@ data = {
                 "owner_username": "chris",
                 "plugin_pipings": "https://example.com/api/v1/pipelines/2/pipings/",
                 "plugins": "https://example.com/api/v1/pipelines/2/plugins/",
-                "url": "https://example.com/api/v1/pipelines/2/"
-            }
+                "url": "https://example.com/api/v1/pipelines/2/",
+            },
         ],
         "template": {
             "data": [
-                {
-                    "name": "name",
-                    "value": ""
-                },
-                {
-                    "name": "authors",
-                    "value": ""
-                },
-                {
-                    "name": "category",
-                    "value": ""
-                },
-                {
-                    "name": "description",
-                    "value": ""
-                },
-                {
-                    "name": "locked",
-                    "value": ""
-                },
-                {
-                    "name": "plugin_tree",
-                    "value": ""
-                },
-                {
-                    "name": "plugin_inst_id",
-                    "value": ""
-                }
+                {"name": "name", "value": ""},
+                {"name": "authors", "value": ""},
+                {"name": "category", "value": ""},
+                {"name": "description", "value": ""},
+                {"name": "locked", "value": ""},
+                {"name": "plugin_tree", "value": ""},
+                {"name": "plugin_inst_id", "value": ""},
             ]
-        }
+        },
     },
-
-    'https://example.com/api/v1/pipelines/2/': {
+    "https://example.com/api/v1/pipelines/2/": {
         "authors": "Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>",
         "category": "",
         "creation_date": "2021-11-12T23:03:58.742417-05:00",
@@ -138,31 +87,16 @@ data = {
         "plugins": "https://example.com/api/v1/pipelines/2/plugins/",
         "template": {
             "data": [
-                {
-                    "name": "name",
-                    "value": ""
-                },
-                {
-                    "name": "authors",
-                    "value": ""
-                },
-                {
-                    "name": "category",
-                    "value": ""
-                },
-                {
-                    "name": "description",
-                    "value": ""
-                }
+                {"name": "name", "value": ""},
+                {"name": "authors", "value": ""},
+                {"name": "category", "value": ""},
+                {"name": "description", "value": ""},
             ]
         },
-        "url": "https://example.com/api/v1/pipelines/2/"
+        "url": "https://example.com/api/v1/pipelines/2/",
     },
-
-    'https://exmaple.com/api/v1/pipelines/2/pipings/': {
-        "collection_links": {
-            "pipeline": "https://example.com/api/v1/pipelines/2/"
-        },
+    "https://exmaple.com/api/v1/pipelines/2/pipings/": {
+        "collection_links": {"pipeline": "https://example.com/api/v1/pipelines/2/"},
         "count": 8,
         "next": None,
         "previous": None,
@@ -174,7 +108,7 @@ data = {
                 "plugin": "https://example.com/api/v1/plugins/4/",
                 "plugin_id": 4,
                 "previous": None,
-                "url": "https://example.com/api/v1/pipelines/pipings/4/"
+                "url": "https://example.com/api/v1/pipelines/pipings/4/",
             },
             {
                 "id": 5,
@@ -184,7 +118,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/4/",
                 "previous_id": 4,
-                "url": "https://example.com/api/v1/pipelines/pipings/5/"
+                "url": "https://example.com/api/v1/pipelines/pipings/5/",
             },
             {
                 "id": 6,
@@ -194,7 +128,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/4/",
                 "previous_id": 4,
-                "url": "https://example.com/api/v1/pipelines/pipings/6/"
+                "url": "https://example.com/api/v1/pipelines/pipings/6/",
             },
             {
                 "id": 7,
@@ -204,7 +138,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/5/",
                 "previous_id": 5,
-                "url": "https://example.com/api/v1/pipelines/pipings/7/"
+                "url": "https://example.com/api/v1/pipelines/pipings/7/",
             },
             {
                 "id": 8,
@@ -214,7 +148,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/6/",
                 "previous_id": 6,
-                "url": "https://example.com/api/v1/pipelines/pipings/8/"
+                "url": "https://example.com/api/v1/pipelines/pipings/8/",
             },
             {
                 "id": 9,
@@ -224,7 +158,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/6/",
                 "previous_id": 6,
-                "url": "https://example.com/api/v1/pipelines/pipings/9/"
+                "url": "https://example.com/api/v1/pipelines/pipings/9/",
             },
             {
                 "id": 10,
@@ -234,7 +168,7 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/6/",
                 "previous_id": 6,
-                "url": "https://example.com/api/v1/pipelines/pipings/10/"
+                "url": "https://example.com/api/v1/pipelines/pipings/10/",
             },
             {
                 "id": 11,
@@ -244,12 +178,11 @@ data = {
                 "plugin_id": 4,
                 "previous": "https://example.com/api/v1/pipelines/pipings/10/",
                 "previous_id": 10,
-                "url": "https://example.com/api/v1/pipelines/pipings/11/"
-            }
-        ]
+                "url": "https://example.com/api/v1/pipelines/pipings/11/",
+            },
+        ],
     },
-
-    'https://example.com/api/v1/pipelines/2/parameters/': {
+    "https://example.com/api/v1/pipelines/2/parameters/": {
         "count": 40,
         "next": None,
         "previous": None,
@@ -267,7 +200,7 @@ data = {
                 "previous_plugin_piping_id": None,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/8/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 7,
@@ -282,7 +215,7 @@ data = {
                 "previous_plugin_piping_id": None,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/7/",
-                "value": "a"
+                "value": "a",
             },
             {
                 "id": 10,
@@ -297,7 +230,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/10/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 9,
@@ -312,7 +245,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/9/",
-                "value": "b"
+                "value": "b",
             },
             {
                 "id": 12,
@@ -327,7 +260,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/12/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 11,
@@ -342,7 +275,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/11/",
-                "value": "c"
+                "value": "c",
             },
             {
                 "id": 14,
@@ -357,7 +290,7 @@ data = {
                 "previous_plugin_piping_id": 5,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/14/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 13,
@@ -372,7 +305,7 @@ data = {
                 "previous_plugin_piping_id": 5,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/13/",
-                "value": "d"
+                "value": "d",
             },
             {
                 "id": 16,
@@ -387,7 +320,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/16/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 15,
@@ -402,7 +335,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/15/",
-                "value": "e"
+                "value": "e",
             },
             {
                 "id": 18,
@@ -417,7 +350,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/18/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 17,
@@ -432,7 +365,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/17/",
-                "value": "f"
+                "value": "f",
             },
             {
                 "id": 20,
@@ -447,7 +380,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/20/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 19,
@@ -462,7 +395,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/19/",
-                "value": "g"
+                "value": "g",
             },
             {
                 "id": 22,
@@ -477,7 +410,7 @@ data = {
                 "previous_plugin_piping_id": 10,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/22/",
-                "value": "0"
+                "value": "0",
             },
             {
                 "id": 21,
@@ -492,7 +425,7 @@ data = {
                 "previous_plugin_piping_id": 10,
                 "type": "string",
                 "url": "https://example.com/api/v1/pipelines/string-parameter/21/",
-                "value": "h"
+                "value": "h",
             },
             {
                 "id": 4,
@@ -507,7 +440,7 @@ data = {
                 "previous_plugin_piping_id": None,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/4/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 5,
@@ -522,7 +455,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/5/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 6,
@@ -537,7 +470,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/6/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 7,
@@ -552,7 +485,7 @@ data = {
                 "previous_plugin_piping_id": 5,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/7/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 8,
@@ -567,7 +500,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/8/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 9,
@@ -582,7 +515,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/9/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 10,
@@ -597,7 +530,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/10/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 11,
@@ -612,7 +545,7 @@ data = {
                 "previous_plugin_piping_id": 10,
                 "type": "integer",
                 "url": "https://example.com/api/v1/pipelines/integer-parameter/11/",
-                "value": 1
+                "value": 1,
             },
             {
                 "id": 4,
@@ -627,7 +560,7 @@ data = {
                 "previous_plugin_piping_id": None,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/4/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 5,
@@ -642,7 +575,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/5/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 6,
@@ -657,7 +590,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/6/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 7,
@@ -672,7 +605,7 @@ data = {
                 "previous_plugin_piping_id": 5,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/7/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 8,
@@ -687,7 +620,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/8/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 9,
@@ -702,7 +635,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/9/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 10,
@@ -717,7 +650,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/10/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 11,
@@ -732,7 +665,7 @@ data = {
                 "previous_plugin_piping_id": 10,
                 "type": "float",
                 "url": "https://example.com/api/v1/pipelines/float-parameter/11/",
-                "value": 1.1
+                "value": 1.1,
             },
             {
                 "id": 4,
@@ -747,7 +680,7 @@ data = {
                 "previous_plugin_piping_id": None,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/4/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 5,
@@ -762,7 +695,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/5/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 6,
@@ -777,7 +710,7 @@ data = {
                 "previous_plugin_piping_id": 4,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/6/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 7,
@@ -792,7 +725,7 @@ data = {
                 "previous_plugin_piping_id": 5,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/7/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 8,
@@ -807,7 +740,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/8/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 9,
@@ -822,7 +755,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/9/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 10,
@@ -837,7 +770,7 @@ data = {
                 "previous_plugin_piping_id": 6,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/10/",
-                "value": False
+                "value": False,
             },
             {
                 "id": 11,
@@ -852,8 +785,8 @@ data = {
                 "previous_plugin_piping_id": 10,
                 "type": "boolean",
                 "url": "https://example.com/api/v1/pipelines/boolean-parameter/11/",
-                "value": False
-            }
-        ]
-    }
+                "value": False,
+            },
+        ],
+    },
 }

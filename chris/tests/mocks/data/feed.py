@@ -11,9 +11,7 @@ data = {
     "modification_date": "2021-07-09T00:02:20.005357-04:00",
     "name": "A mock feed",
     "note": "https://example.com/api/v1/note3/",
-    "owner": [
-        "https://example.com/api/v1/users/4/"
-    ],
+    "owner": ["https://example.com/api/v1/users/4/"],
     "plugin_instances": "https://example.com/api/v1/3/plugininstances/",
     "registering_jobs": 0,
     "scheduled_jobs": 0,
@@ -21,17 +19,8 @@ data = {
     "taggings": "https://example.com/api/v1/3/taggings/",
     "tags": "https://example.com/api/v1/3/tags/",
     "template": {
-        "data": [
-            {
-                "name": "name",
-                "value": ""
-            },
-            {
-                "name": "owner",
-                "value": ""
-            }
-        ]
+        "data": [{"name": "name", "value": ""}, {"name": "owner", "value": ""}]
     },
     "url": "https://example.com/api/v1/3/",
-    "waiting_jobs": 0
+    "waiting_jobs": 0,
 }

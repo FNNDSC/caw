@@ -13,6 +13,7 @@ class Feed(ResourceWithTemplate):
     """
     A *feed* in *ChRIS* is a DAG of *plugin instances*.
     """
+
     id: FeedId
     creation_date: ISOFormatDateString
     modification_date: ISOFormatDateString
@@ -35,18 +36,11 @@ class Feed(ResourceWithTemplate):
     plugin_instances: CUBEUrl
 
     def set_name(self, name: str) -> dict:
-        return self.__put(
-            url=self.url,
-            data={'name': name}
-        )
+        return self.__put(url=self.url, data={"name": name})
 
     def set_description(self, description: str) -> dict:
         return self.__put(
-            url=self.note,
-            data={
-                'title': 'Description',
-                'content': description
-            }
+            url=self.note, data={"title": "Description", "content": description}
         )
 
     def __put(self, url: CUBEUrl, data: dict) -> dict:

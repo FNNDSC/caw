@@ -11,4 +11,5 @@ class CUBEResource(ConnectedResource, abc.ABC):
 
     Responses from the CUBE API always return a ``url`` which indicated the requested URI.
     """
+
     url: CUBEUrl

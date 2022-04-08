@@ -1,12 +1,21 @@
 import time
-from typing import Callable, TypeVar, Iterable, Optional, Union, FrozenSet, Generator, Type
+from typing import (
+    Callable,
+    TypeVar,
+    Iterable,
+    Optional,
+    Union,
+    FrozenSet,
+    Generator,
+    Type,
+)
 import requests
 
 from chris.types import CUBEAddress
 from chris.errors import WaitTimeoutException
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def __optional2set(c: Optional[Union[T, Iterable[T]]]) -> FrozenSet[T]:
@@ -17,11 +26,14 @@ def __optional2set(c: Optional[Union[T, Iterable[T]]]) -> FrozenSet[T]:
     return frozenset(c)
 
 
-def block_until(poller: Callable[[], T],
-                not_ready_exception: Optional[Union[Type[Exception], Iterable[Type[Exception]]]] = None,
-                interval: float = 2.0,
-                timeout: float = 300
-                ) -> Generator[Union[Exception, T], None, None]:
+def block_until(
+    poller: Callable[[], T],
+    not_ready_exception: Optional[
+        Union[Type[Exception], Iterable[Type[Exception]]]
+    ] = None,
+    interval: float = 2.0,
+    timeout: float = 300,
+) -> Generator[Union[Exception, T], None, None]:
     """
     Blocks until a "ready" event by repeatedly polling using a function.
 
@@ -48,9 +60,9 @@ def block_until(poller: Callable[[], T],
     """
 
     if timeout <= 0:
-        raise ValueError('timeout must be in the range (0, inf)')
+        raise ValueError("timeout must be in the range (0, inf)")
     if interval <= 0:
-        raise ValueError('interval must be in the range (0, inf)')
+        raise ValueError("interval must be in the range (0, inf)")
 
     permissible_exceptions = __optional2set(not_ready_exception)
 
@@ -66,24 +78,24 @@ def block_until(poller: Callable[[], T],
         finally:
             time.sleep(interval)
             elapsed += interval
-    raise WaitTimeoutException(f'Timeout reached after {timeout} seconds')
+    raise WaitTimeoutException(f"Timeout reached after {timeout} seconds")
 
 
 def __expected_response_from_users(users_url: str) -> dict:
     return {
-        'collection': {
-            'version': '1.0',
-            'href': users_url,
-            'items': [],
-            'links': [],
-            'template': {
-                'data': [
-                    {'name': 'username', 'value': ''},
-                    {'name': 'password', 'value': ''},
-                    {'name': 'email', 'value': ''}
+        "collection": {
+            "version": "1.0",
+            "href": users_url,
+            "items": [],
+            "links": [],
+            "template": {
+                "data": [
+                    {"name": "username", "value": ""},
+                    {"name": "password", "value": ""},
+                    {"name": "email", "value": ""},
                 ]
             },
-            'total': 0
+            "total": 0,
         }
     }
 
@@ -96,21 +108,23 @@ def wait_until_ready(url: CUBEAddress) -> Generator[None, None, None]:
     :param url: address of ChRIS backend
     :return: a Generator which produces the errors or responses from polling
     """
-    if url.endswith('api/v1/'):
-        url += 'users/'
+    if url.endswith("api/v1/"):
+        url += "users/"
 
     session = requests.Session()
-    session.headers.update({
-        'Accept': 'application/vnd.collection+json'
-    })
+    session.headers.update({"Accept": "application/vnd.collection+json"})
 
     expected = __expected_response_from_users(url)
 
     def poll_user() -> bool:
         return session.get(url=url).json()
 
-    for res in block_until(poller=poll_user, not_ready_exception=requests.exceptions.ConnectionError,
-                           interval=2.0, timeout=300.0):
+    for res in block_until(
+        poller=poll_user,
+        not_ready_exception=requests.exceptions.ConnectionError,
+        interval=2.0,
+        timeout=300.0,
+    ):
         if isinstance(res, dict) and res == expected:
             break
         yield res

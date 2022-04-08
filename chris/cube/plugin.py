@@ -1,7 +1,13 @@
 from dataclasses import dataclass
 from chris.cube.resource import CUBEResource
 from chris.types import (
-    PluginId, PluginName, PluginType, PluginVersion, ISOFormatDateString, ContainerImageTag, CUBEUrl
+    PluginId,
+    PluginName,
+    PluginType,
+    PluginVersion,
+    ISOFormatDateString,
+    ContainerImageTag,
+    CUBEUrl,
 )
 from chris.cube.plugin_instance import PluginInstance
 from chris.helpers.collection import collection_helper
@@ -18,6 +24,7 @@ class Plugin(CUBEResource):
     To run something on *ChRIS*, a user creates a :class:`PluginInstance`
     of a *plugin*.
     """
+
     id: PluginId
     creation_date: ISOFormatDateString
     name: PluginName
@@ -54,7 +61,7 @@ class Plugin(CUBEResource):
     compute_resources: CUBEUrl
 
     def create_instance(self, params: dict = None) -> PluginInstance:
-        logging.debug('%s: %s', self.name, params)
+        logging.debug("%s: %s", self.name, params)
         payload = collection_helper(params)
         res = self.s.post(self.instances, json=payload)
         res.raise_for_status()

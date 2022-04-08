@@ -21,34 +21,24 @@ class Pipeline(abc.ABC):
         Produce a JSON representation which can be uploaded to a CUBE instance.
         """
         data = [
+            {"name": "name", "value": self.name},
             {
-                'name': 'name',
-                'value': self.name
+                "name": "authors",
+                "value": self.authors,
             },
             {
-                'name': 'authors',
-                'value': self.authors,
+                "name": "category",
+                "value": self.category,
             },
             {
-                'name': 'category',
-                'value': self.category,
+                "name": "description",
+                "value": self.description,
             },
             {
-                'name': 'description',
-                'value': self.description,
+                "name": "locked",
+                "value": self.locked,
             },
-            {
-                'name': 'locked',
-                'value': self.locked,
-            },
-            {
-                'name': 'plugin_tree',
-                'value': self.get_root().deserialize()
-            }
+            {"name": "plugin_tree", "value": self.get_root().deserialize()},
         ]
-        template = {
-            'template': {
-                'data': data
-            }
-        }
+        template = {"template": {"data": data}}
         return json.dumps(template)

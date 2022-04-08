@@ -28,14 +28,17 @@ expected = r"""
       \"plugin_parameter_defaults\":[{\"name\":\"prefix\",\"default\":\"h\"}]}
   ]"}]}}
 """
-expected = expected.replace('\n', ' ')
+expected = expected.replace("\n", " ")
 
 
 def test_deserialize():
-    client = ChrisClient.from_login(address='http://localhost:8000/api/v1/',
-                                    username='chris', password='chris1234')
-    pipeline = client.get_pipeline('Example branching pipeline')
-    expected_plugin_tree = json.loads(json.loads(expected)['template']['data'][-1]['value'])
+    client = ChrisClient.from_login(
+        address="http://localhost:8000/api/v1/", username="chris", password="chris1234"
+    )
+    pipeline = client.get_pipeline("Example branching pipeline")
+    expected_plugin_tree = json.loads(
+        json.loads(expected)["template"]["data"][-1]["value"]
+    )
     actual = pipeline.get_root().deserialize_tree()
 
     # limitation: retrieved plugin tree will have all parameter defaults
@@ -46,9 +49,8 @@ def test_deserialize():
 
 
 def __remove_defaults_except_prefix(piping: dict) -> None:
-    piping['plugin_parameter_defaults'] = [
-        p for p in piping['plugin_parameter_defaults']
-        if p['name'] == 'prefix'
+    piping["plugin_parameter_defaults"] = [
+        p for p in piping["plugin_parameter_defaults"] if p["name"] == "prefix"
     ]
 
 
@@ -58,11 +60,11 @@ def sorted_pipings(plugin_tree: list) -> list:
 
 class SerializedPiping:
     def __init__(self, __d: dict):
-        self.plugin_name = __d['plugin_name']
-        self.plugin_version = __d['plugin_version']
-        self.previous_index = __d['previous_index']
+        self.plugin_name = __d["plugin_name"]
+        self.plugin_version = __d["plugin_version"]
+        self.previous_index = __d["previous_index"]
 
-    def __lt__(self, other: 'SerializedPiping') -> bool:
+    def __lt__(self, other: "SerializedPiping") -> bool:
         if self.previous_index is None:
             return True
         if other.previous_index is None:

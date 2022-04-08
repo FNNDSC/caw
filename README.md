@@ -1,6 +1,6 @@
 # Python _ChRIS_ Client
 
-[![Unit Tests](https://github.com/FNNDSC/caw/actions/workflows/test.yml/badge.svg)](https://github.com/FNNDSC/caw/actions)
+[![CI](https://github.com/FNNDSC/caw/actions/workflows/ci.yml/badge.svg)](https://github.com/FNNDSC/caw/actions)
 [![PyPI](https://img.shields.io/pypi/v/caw)](https://pypi.org/project/caw/)
 [![License - MIT](https://img.shields.io/pypi/l/caw)](https://github.com/FNNDSC/caw/blob/master/LICENSE)
 

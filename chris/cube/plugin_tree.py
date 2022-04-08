@@ -11,7 +11,7 @@ from chris.cube.piping import Piping
 
 
 @dataclass(frozen=True)
-class PluginTree(ConnectedResource, Collection['PluginTree']):
+class PluginTree(ConnectedResource, Collection["PluginTree"]):
     """
     A ``PluginTree`` is an immutable node of a directed acyclic graph
     of plugins and default parameters for each plugin.
@@ -23,7 +23,7 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
 
     piping: Piping
     default_parameters: Dict[str, ParameterType]
-    children: Tuple['PluginTree', ...] = field(default_factory=tuple)
+    children: Tuple["PluginTree", ...] = field(default_factory=tuple)
     # tuple instead of frozenset because PluginTree.default_parameters
     # is a dict, which is not hashable
 
@@ -32,8 +32,9 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
         res.raise_for_status()
         return Plugin(s=self.s, **res.json())
 
-    def run(self, plugin_instance_id: PluginInstanceId
-            ) -> Generator[Tuple[PluginInstance, 'PluginTree'], None, None]:
+    def run(
+        self, plugin_instance_id: PluginInstanceId
+    ) -> Generator[Tuple[PluginInstance, "PluginTree"], None, None]:
         """
         Create plugin instances in DFS-order.
         The returned iterator must be iterated through to
@@ -43,9 +44,7 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
 
         :param plugin_instance_id: parent plugin instance
         """
-        params = {
-            'previous_id': plugin_instance_id
-        }
+        params = {"previous_id": plugin_instance_id}
         params.update(self.default_parameters)
         created_instance = self.get_plugin().create_instance(params)
         yield created_instance, self
@@ -54,14 +53,14 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
 
     # the two traversal methods below are not currently used
 
-    def dfs(self) -> Generator['PluginTree', None, None]:
+    def dfs(self) -> Generator["PluginTree", None, None]:
         """
         Depth-first graph traversal.
         """
         yield self
         yield from self.children
 
-    def bfs(self) -> Generator['PluginTree', None, None]:
+    def bfs(self) -> Generator["PluginTree", None, None]:
         """
         Breadth-first graph traversal.
 
@@ -70,7 +69,7 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
         A stupidly optimal solution would schedule branches by
         doing the HTTP POST requests in parallel.
         """
-        queue: deque['PluginTree'] = deque()
+        queue: deque["PluginTree"] = deque()
         queue.append(self)
         while queue:
             current = queue.popleft()
@@ -102,9 +101,7 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
 
     def deserialize_tree(self) -> list:
         data = []
-        index_map: dict[Optional[PipingId], Optional[int]] = {
-            None: None
-        }
+        index_map: dict[Optional[PipingId], Optional[int]] = {None: None}
 
         for node in self.bfs():
             index_map[node.piping.id] = len(data)
@@ -119,17 +116,14 @@ class PluginTree(ConnectedResource, Collection['PluginTree']):
         """
         plugin = self.get_plugin()
         data = {
-            'plugin_name': plugin.name,
-            'plugin_version': plugin.version,
-            'previous_index': previous_index
+            "plugin_name": plugin.name,
+            "plugin_version": plugin.version,
+            "previous_index": previous_index,
         }
 
         if self.default_parameters:
-            data['plugin_parameter_defaults'] = [
-                {
-                    'name': name,
-                    'default': value
-                }
+            data["plugin_parameter_defaults"] = [
+                {"name": name, "default": value}
                 for name, value in self.default_parameters.items()
             ]
 

@@ -12,4 +12,5 @@ class ConnectedResource(abc.ABC):
     CONSTRAINT: ``s`` must have HTTP headers for authentication
                 with CUBE and also the header ``Accept: application/json``
     """
+
     s: requests.Session
