@@ -65,28 +65,18 @@ class LoginManager:
 
     def _config_file_is_sane(self) -> bool:
         """
-        :return: True if the configuration file is valid JSON and its major version
-                 spec is compatible with the current version of caw
+        :return: True if the configuration file is valid JSON
         """
         with self.__savefile.open('r') as f:
             try:
-                data = json.load(f)
+                json.load(f)
             except json.JSONDecodeError:
                 msg = f'CRITICAL: the file {self.__savefile} is not valid JSON.'
                 typer.secho(msg, fg=typer.colors.RED, err=True)
                 raise typer.Abort()
 
-        if 'version' not in data:
-            return False
-
-        try:
-            spec = version.Version(data['version'])
-        except version.InvalidVersion:
-            typer.secho(f'WARNING: invalid config version specified in {self.__savefile}.',
-                        fg=typer.colors.RED, err=True)
-            return False
-
-        return spec.major == self.VERSION.major
+        # version check disabled
+        return True
 
     def _write_empty_config(self):
         """

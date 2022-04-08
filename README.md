@@ -1,261 +1,39 @@
-# ChRIS Automated Workflows
+# Python _ChRIS_ Client
 
 [![Unit Tests](https://github.com/FNNDSC/caw/actions/workflows/test.yml/badge.svg)](https://github.com/FNNDSC/caw/actions)
 [![PyPI](https://img.shields.io/pypi/v/caw)](https://pypi.org/project/caw/)
 [![License - MIT](https://img.shields.io/pypi/l/caw)](https://github.com/FNNDSC/caw/blob/master/LICENSE)
 
-A command-line client for _ChRIS_ for pipeline execution and data mangement.
+A Python _ChRIS_ client library.
 
 ## Installation
 
-The easiest option is via `pip`.
-
-### Pip
-
 ```shell
 pip install -U caw
-
-# optional, for tab completion of subcommands
-caw --install-completion
-# optional, for secure password storage
-pip install keyring
 ```
 
-Alternatively, container images are also provided. See [below](#container-usage).
+## Example
 
-### Usage
+```python
+from pathlib import Path
+from chris.client import ChrisClient
 
-```shell
-caw [OPTIONS] COMMAND [ARGS]...
+client = ChrisClient.from_login(
+    address="https://cube.chrisproject.org/api/v1/",
+    username="chris",
+    password="chris1234"
+)
+client.upload(Path("example.txt"), "my_examples")
+dircopy = client.get_plugin_by_name("pl-dircopy")
+plinst = dircopy.create_instance({"dir": "chris/uploads/my_examples/example.txt"})
 ```
 
-#### Container Usage
-
-A Docker image is also provided. Podman and Docker work equally well.
-
-```shell
-docker run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
-podman run --rm --net=host -v $PWD/data:/data:ro -t fnndsc/caw:latest caw upload /data
-```
-
-Container isolation can make usage finicky.
-Volumes must be mounted for the container to read data which exists on the host filesystem.
-If the _ChRIS_ backend is on a private network, the `--net=host` option might be necessary to resolve
-the server's hostname.
-
-Alternatively, [Singularity](https://en.wikipedia.org/wiki/Singularity_(software))
-is much easier to use because of its weaker container isolation and `$HOME` is a bind path by default.
-
-```shell
-singularity exec docker://fnndsc/caw:latest caw upload ./data
-```
-
-## Documentation
-
-Details are provided by the `--help` commaand.
-
-```shell
-caw --help
-caw search --help
-caw pipeline --help
-caw download --help
-caw upload --help
-```
-
-### Logging In
-
-Multiple ways of providing your credentials are supported. The most secure way is to
-install the optional dependency [`keyring`](https://pypi.org/project/keyring/)
-and run `caw login`.
-
-```shell
-# install optional dependency
-pip install keyring
-caw --address https://cube.chrisproject.org/api/v1/ --username 'a_crow' login
-```
-
-Alternatively, _ChRIS_ user account credentials can be passed via command-line arguments or environment variables.
-It's safer to use environment variables (so that your password isn't saved to history)
-and also easier (no need to retype it out everytime).
-
-```shell
-# using cli arguments
-caw --address https://cube.chrisproject.org/api/v1/ \
-    --username 'a_crow'      \
-    --password notchris1234  \
-    search
-
-# using environment variables
-export CHRIS_URL=https://cube.chrisproject.org/api/v1/
-export CHRIS_USERNAME=a_crow
-export CHRIS_PASSWORD=notchris1234
-
-caw search
-```
-
-### Commands
-
-- `search`:   Search for pipelines that are saved in _ChRIS_.
-- `pipeline`: Run a pipeline on an existing feed.
-- `upload`:   Upload files into _ChRIS_ storage and run [`pl-dircopy`](https://chrisstore.co/plugin/25).
-- `download`: Download everything from a _ChRIS_ url.
-
-#### `caw search`
-
-Search for pipelines that are saved in _ChRIS_.
-
-###### Examples
-
-```shell
-# list all pipellines
-$ caw search
-https://cube.chrisproject.org/api/v1/pipelines/1/           Automatic Fetal Brain Reconstruction Pipeline
-https://cube.chrisproject.org/api/v1/pipelines/2/           Infant FreeSurfer with Cerebellum Step
-https://cube.chrisproject.org/api/v1/pipelines/2/           COVID-Net Chest CT Analysis and Report
-
-# search for pipelines by name
-$ caw search 'Fetal Brain'
-https://cube.chrisproject.org/api/v1/pipelines/1/           Automatic Fetal Brain Reconstruction Pipeline
-```
-
-#### `caw pipeline`
-
-Run a pipeline on an existing feed.
-
-###### Examples
-
-```shell
-# specify source as a plugin instance ID
-$ caw pipeline --target 3 'Automatic Fetal Brain Reconstruction Pipeline'
-
-# specify source by URL
-$ caw pipeline --target https://cube.chrisproject.org/api/v1/plugins/instances/3/ 'Automatic Fetal Brain Reconstruction Pipeline'
-```
-
-#### `caw upload`
-
-Upload files into _ChRIS_ storage and then run pl-dircopy, printing the URL for the newly created plugin instance.
-
-###### Examples
-
-```shell
-# upload files and create a new feed by running pl-dircopy
-$ caw upload something.txt picture.jpg
-
-# upload a folder and create a new feed by running pl-dircopy
-$ caw upload data/
-
-# create a feed with a title and description
-$ caw upload --name 'Caw caw, ima crow' --description 'A murder of crows' \
-    something.txt picture.jpg
-
-# create a feed and run a pipeline after the pl-dircopy instance
-$ caw upload --name 'In-utero study' \
-    --pipeline 'Automatic Fetal Brain Reconstruction Pipeline' \
-    data/T2_*.nii
-```
-
-###### Piping
-
-The commands `caw upload` and `caw pipeline` print out the URLs of
-the resources that they create. Advanced users might pipe the output
-of `caw` to other commands such as
-[`xh`](https://github.com/ducaale/xh) and [`jq`](https://stedolan.github.io/jq/).
-
-`caw pipeline` prints out the plugin instances it creates.
-
-`caw upload` prints out the feed it creates. Alternatively, the option
-`caw upload --output plugininstances` tells `caw upload` to print out
-the plugin instances it creates instead, similar to be behavior of `caw pipeline`.
-
-#### `caw download`
-
-Download files from _ChRIS_.
-
-```bash
-# download everything from a feed
-$ caw download 'https://cube.chrisproject.org/api/v1/3/files/' results/
-
-# download the output directory of a specific plugin instance
-$ caw download 'https://cube.chrisproject.org/api/v1/plugins/instances/5/files/' results/
-
-# download everything from a path 'chris/uploads/test'
-$ caw download 'https://cube.chrisproject.org/api/v1/uploadedfiles/search/?fname=chris%2Fuploads%2Ftest' results/
-
-# example results
-$ tree results/
-wow
-└── uploads
-    └── test
-        ├── a.txt
-        ├── b.txt
-        ├── c.txt
-        ├── d.txt
-        └── e.txt
-```
-
-#### `caw export`
-
-Export a registered pipeline to JSON.
-
-```shell
-caw export 'Automatic Fetal Brain Reconstruction Pipeline v1.0.0' > pipeline.json
-
-curl -u "chris:chris1234" "https://example.com/api/v1/pipelines/" \
-  -H 'Content-Type:application/vnd.collection+json' \
-  -H 'Accept:application/vnd.collection+json' \
-  --data "$(< pipeline.json)"
-```
-
-##### `caw export` Limitations
-
-- All plugin parameters will be exported as part of `plugin_parameter_defaults`
-- Order of lists, such as `plugin_tree` and `plugin_parameter_defaults`, may not be the same as the original
-
-## Development
-
-```shell
-python -m venv venv
-source venv/bin/activate
-pip install -e .
-```
-
-### Testing
-
-First, set up the _ChRIS_ backend on `http://localhost:8000/api/v1/`
-(say, using [_miniChRIS_](https://github.com/FNNDSC/miniChRIS)).
-
-Next, install the example pipeline.
-
-```shell
-./examples/dummy_pipeline.sh
-./examples/upload_reconstruction_pipeline.sh
-```
-
-Install testing dependencies:
-
-```shell
-pip install pytest pytest_mock
-```
-
-Run all tests using the command
-
-```shell
-pytest
-```
-
-The end-to-end test is disabled by default because it will create a _ChRIS_ account and
-affect `caw` user settings. It is recommended to run it in a container instead.
-
-```shell
-docker build -t caw -f Dockerfile.dev .
-docker run --rm --net=host --userns=host -v $PWD:/usr/local/src/caw:ro \
-       -t -e CAW_TEST_FULL=y caw
-```
-
-## Roadmap
-
-For the next-generation _ChRIS_ client, see
-[chrs](https://github.com/FNNDSC/chrs),
-and how it compares to `caw`:
-https://github.com/FNNDSC/chrs/wiki/Feature-Table
+## Command-Line Client
+
+[chrs](https://github.com/FNNDSC/chrs/tree/master/chrs#readme)
+is the next-generation _ChRIS_ command-line client, please check it out.
+
+`caw` includes a command-line client for _ChRIS_.
+Its last supported version was 0.6.1 and is deprecated as of version 0.7.0.
+It will be removed in an upcoming release.
+For usage, see https://github.com/FNNDSC/caw/blob/d5b05b28af312b97ac80bd96376d70626db737a5/README.md

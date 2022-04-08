@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from dataclasses import dataclass, field
 import requests
@@ -98,20 +99,20 @@ class ChrisClient(ConnectedResource):
     def search_addr_pipelines(self) -> CUBEUrl:
         return CUBEUrl(self.address + 'pipelines/search/')
 
-    def upload(self, file_path: Path, upload_folder: Path) -> dict:
+    def upload(self, local_file: Path, upload_folder: Union[str | os.PathLike]) -> dict:
         """
         Upload a local file into ChRIS backend Swift storage.
 
-        :param file_path: local file path
+        :param local_file: local file path
         :param upload_folder: path in Swift where to upload to
         :return: response
         """
-        upload_path = upload_folder / file_path.name
+        upload_path = Path(upload_folder) / local_file.name
 
-        with open(file_path, 'rb') as file_object:
+        with local_file.open('rb') as file_object:
             files = {
                 'upload_path': (None, str(upload_path)),
-                'fname': (file_path.name, file_object)
+                'fname': (local_file.name, file_object)
             }
             res = self.s.post(
                 self.collection_links['uploadedfiles'],
