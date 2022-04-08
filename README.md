@@ -41,7 +41,13 @@ though it's not published to PyPI.
 [chrs](https://github.com/FNNDSC/chrs/tree/master/chrs#readme)
 is the next-generation _ChRIS_ command-line client, please check it out.
 
-`caw` includes a command-line client for _ChRIS_.
-Its last supported version was 0.6.1 and is deprecated as of version 0.7.0.
-It will be removed in an upcoming release.
-For usage, see https://github.com/FNNDSC/caw/blob/d5b05b28af312b97ac80bd96376d70626db737a5/README.md
+`caw` previously included a command-line client for _ChRIS_, however
+since v0.7.0 it was deprecated and removed.
+
+To use the `caw` command:
+
+```shell
+pip install caw==0.6.1
+```
+
+Usage: https://github.com/FNNDSC/caw/blob/d5b05b28af312b97ac80bd96376d70626db737a5/README.md
