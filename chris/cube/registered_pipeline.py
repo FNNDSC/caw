@@ -30,7 +30,7 @@ class RegisteredPipeline(CUBEResource, Pipeline):
     def get_default_parameters(self) -> Sequence[PipingParameter]:
         return list(
             fetch_paginated_objects(
-                s=self.s, url=self.default_parameters, constructor=PipingParameter
+                session=self.s, url=self.default_parameters, constructor=PipingParameter
             )
         )
 
@@ -47,5 +47,5 @@ class RegisteredPipeline(CUBEResource, Pipeline):
 
     def get_pipings(self) -> Generator[Piping, None, None]:
         yield from fetch_paginated_objects(
-            s=self.s, url=self.plugin_pipings, constructor=Piping
+            session=self.s, url=self.plugin_pipings, constructor=Piping
         )

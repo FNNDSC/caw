@@ -1,8 +1,8 @@
-import os
 from pathlib import Path
 from dataclasses import dataclass, field
 import requests
 from typing import Optional, Union, Generator, Dict
+import functools
 
 from chris.types import (
     CUBEAddress,
@@ -16,7 +16,7 @@ from chris.types import (
 )
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
-from chris.cube.files import DownloadableFilesGenerator
+from chris.cube.files import DownloadableFilesGenerator, DownloadableFile
 from chris.cube.registered_pipeline import RegisteredPipeline
 from chris.cube.pagination import fetch_paginated_objects
 from chris.cube.resource import ConnectedResource
@@ -83,6 +83,8 @@ class ChrisClient(ConnectedResource):
         )
         return s
 
+    # TODO all of these links can be cached properties
+
     def __get_collection_links(self) -> Dict[str, CUBEUrl]:
         """
         Make a request to the CUBE address. Calling this method verifies
@@ -117,63 +119,62 @@ class ChrisClient(ConnectedResource):
     def search_addr_pipelines(self) -> CUBEUrl:
         return CUBEUrl(self.address + "pipelines/search/")
 
-    def upload(self, local_file: Path, upload_folder: Union[str | os.PathLike]) -> dict:
+    def upload(self, local_file: Path, upload_path: str) -> DownloadableFile:
         """
         Upload a local file into ChRIS backend Swift storage.
 
         :param local_file: local file path
-        :param upload_folder: path in Swift where to upload to
-        :return: response
+        :param upload_path: path in Swift where to upload to
         """
-        upload_path = Path(upload_folder) / local_file.name
+        if not upload_path.startswith(f"{self.username}/uploads/"):
+            upload_path = f"{self.username}/uploads/{upload_path}"
 
         with local_file.open("rb") as file_object:
             files = {
-                "upload_path": (None, str(upload_path)),
+                "upload_path": (None, upload_path),
                 "fname": (local_file.name, file_object),
             }
             res = self.s.post(
                 self.collection_links["uploadedfiles"],
                 files=files,
                 headers={
-                    "Accept": "application/vnd.collection+json",
                     "Content-Type": None,
                 },
             )
         res.raise_for_status()
-        return res.json()
+        return DownloadableFile.deserialize(res.json(), self.s)
 
-    def get_plugin(self, name_exact="", version="", url="") -> Plugin:
-        """
-        Get a single plugin, either searching for it by its exact name, or by URL.
-
-        :param name_exact: name of plugin
-        :param version: (optional) version of plugin
-        :param url: (alternative to name_exact) url of plugin
-        """
-        if url:
-            return self.get_plugin_by_url(url)
-        return self.get_plugin_by_name(name_exact, version)
+    # def get_plugin(self, name_exact="", version="", url="") -> Plugin:
+    #     """
+    #     Get a single plugin, either searching for it by its exact name, or by URL.
+    #
+    #     :param name_exact: name of plugin
+    #     :param version: (optional) version of plugin
+    #     :param url: (alternative to name_exact) url of plugin
+    #     """
+    #     if url:
+    #         return self.get_plugin_by_url(url)
+    #     return self.get_plugin_by_name(name_exact, version)
 
     def get_plugin_by_url(self, url: Union[CUBEUrl, str]):
         res = self.s.get(url)
         res.raise_for_status()
         return Plugin(**res.json(), s=self.s)
 
-    def get_plugin_by_name(
-        self,
-        name_exact: Union[PluginName, str],
-        version: Optional[Union[PluginVersion, str]] = None,
-    ):
-        search = self.search_plugin(name_exact, version)
-        return peek(search, mt=PluginNotFoundError)
+    # def get_plugin_by_name(
+    #     self,
+    #     name_exact: Union[PluginName, str],
+    #     version: Optional[Union[PluginVersion, str]] = None,
+    # ):
+    #     search = self.search_plugin(name_exact, version)
+    #     return peek(search, mt=PluginNotFoundError)
 
-    def search_plugin(
-        self, name_exact: str, version: Optional[str] = None
-    ) -> Generator[Plugin, None, None]:
-        qs = self._join_qs(name_exact=name_exact, version=version)
-        url = CUBEUrl(f"{self.search_addr_plugins}?{qs}")
-        return fetch_paginated_objects(s=self.s, url=url, constructor=Plugin)
+    # def search_plugin(
+    #     self, name_exact: str, version: Optional[str] = None
+    # ) -> Generator[Plugin, None, None]:
+    #     qs = self._join_qs(name_exact=name_exact, version=version)
+    #     url = CUBEUrl(f"{self.search_addr_plugins}?{qs}")
+    #     return fetch_paginated_objects(session=self.s, url=url, constructor=Plugin)
 
     def get_plugin_instance(self, plugin: Union[CUBEUrl, PluginInstanceId]):
         """
@@ -214,11 +215,11 @@ class ChrisClient(ConnectedResource):
         return self.get_files(url)
 
     def get_files(self, url: CUBEUrl) -> DownloadableFilesGenerator:
-        return DownloadableFilesGenerator(url=url, s=self.s)
+        return DownloadableFilesGenerator(url=url, session=self.s)
 
     def search_pipelines(self, name="") -> Generator[RegisteredPipeline, None, None]:
         return fetch_paginated_objects(
-            s=self.s,
+            session=self.s,
             url=CUBEUrl(f"{self.collection_links['pipelines']}search/?name={name}"),
             constructor=RegisteredPipeline,
         )
@@ -226,11 +227,15 @@ class ChrisClient(ConnectedResource):
     def get_pipeline(self, name: str) -> RegisteredPipeline:
         return peek(self.search_pipelines(name), mt=PipelineNotFoundError)
 
-    def get_username(self) -> CUBEUsername:
+    @functools.cached_property
+    def username(self) -> CUBEUsername:
+        return CUBEUsername(self.__user["username"])
+
+    @functools.cached_property
+    def __user(self) -> dict:
         res = self.s.get(url=self.collection_links["user"])
         res.raise_for_status()
-        data = res.json()
-        return CUBEUsername(data["username"])
+        return res.json()
 
     @staticmethod
     def _join_qs(**kwargs) -> str:

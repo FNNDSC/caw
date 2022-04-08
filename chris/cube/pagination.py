@@ -1,98 +1,74 @@
-import os
-import sys
-import json
-from typing import Generator, Any, TypedDict, Callable, TypeVar, List, Dict
+"""
+Pagination helpers.
+"""
 
-import requests
+from dataclasses import dataclass
+from typing import Generator, Any, TypedDict, TypeVar, List, Dict, Callable
 
-from chris.cube.resource import CUBEResource
-from chris.types import CUBEUrl
-
-import logging
-
-logger = logging.getLogger(__name__)
-REQUESTS_ENV_VAR_NAME = "CAW_PAGINATION_MAX_REQUESTS"
-MAX_REQUESTS = int(os.getenv(REQUESTS_ENV_VAR_NAME, 100))
+from requests import Session
 
 
+@dataclass(frozen=True)
 class UnrecognizedResponseException(Exception):
-    pass
+    """
+    Raised when CUBE response could not be deserialized.
+    """
+
+    url: str
+    data: Any
+
+    def __str__(self) -> str:
+        return f"Invalid response from {repr(self.url)}: {repr(self.data)}"
 
 
-class TooMuchPaginationException(Exception):
-    pass
-
-
-T = TypeVar("T", bound=CUBEResource)
-
-
-class JSONPaginatedResponse(TypedDict):
-    count: int
-    next: CUBEUrl
-    previous: CUBEUrl
-    results: List[Dict[str, Any]]
+T = TypeVar("T")
 
 
 def fetch_paginated_objects(
-    s: requests.Session,
-    url: CUBEUrl,
-    constructor=Callable[..., T],
-    max_requests=MAX_REQUESTS,
+    session: Session, url: str, constructor: Callable[[Dict[str, Any], Session], T]
 ) -> Generator[T, None, None]:
-    for d in fetch_paginated_raw(s, url, max_requests):
-        yield constructor(s=s, **d)
-
-
-def fetch_paginated_raw(
-    s: requests.Session, url: CUBEUrl, max_requests: int
-) -> Generator[Dict[str, any], None, None]:
     """
-    Produce all values from a paginated endpoint.
+    Produce all values from a paginated endpoint, making lazy requests as needed.
 
-    :param s: session
-    :param url: the paginated URI, optionally ending
-                with the query-string ``?limit=N&offset=N&``
-    :param max_requests: a quota on the number of requests
-                         a call to this method may make in total
+    Parameters:
+    -----------
+    session : requests.Session
+    url : str
+        paginated URL, optionally with the query string `limit=N&offset=N`
+    constructor: [Dict[str, Any], Session] -> T
+        deserializer for yield type
     """
-    if max_requests <= 0:
-        raise TooMuchPaginationException()
+    for d in _fetch_paginated_raw(session, url):
+        yield constructor(d, session)
 
-    logger.debug("%s", url)
-    res = s.get(url)  # TODO pass qs params separately?
+
+def _fetch_paginated_raw(
+    session: Session, url: str
+) -> Generator[Dict[str, Any], None, None]:
+    res = session.get(url)
     res.raise_for_status()
     data = res.json()
 
     yield from __get_results_from(url, data)
     if data["next"]:
-        yield from fetch_paginated_raw(s, data["next"], max_requests - 1)
+        yield from _fetch_paginated_raw(session, data["next"])
 
 
-__PaginatedResponseKeys = frozenset(JSONPaginatedResponse.__annotations__)
+class _JSONPaginatedResponse(TypedDict):
+    count: int
+    next: str
+    previous: str
+    results: List[Dict[str, Any]]
 
 
-# TODO in Python 3.10, we should use TypeGuard
-# https://docs.python.org/3.10/library/typing.html#typing.TypeGuard
-def __get_results_from(url: CUBEUrl, data: Any) -> List[Dict[str, Any]]:
+__PaginatedResponseKeys = frozenset(_JSONPaginatedResponse.__annotations__)
+
+
+def __get_results_from(url: str, data: Any) -> List[Dict[str, Any]]:
     """
     Check that the response from a paginated endpoint is well-formed,
     and return the results.
     """
-    if not isinstance(data, dict):
-        logging.debug(
-            "Invalid response from %s\n" "Was not parsed correctly into a dict.\n" "%s",
-            url,
-            json.dumps(data, indent=4),
-        )
-        raise UnrecognizedResponseException(f"Response from {url} is invalid.")
-
-    if __PaginatedResponseKeys > frozenset(data.keys()):
-        logging.debug(
-            "Invalid response from %s\n" "dict keys did not match: %s\n" "%s",
-            url,
-            str(__PaginatedResponseKeys),
-            json.dumps(data, indent=4),
-        )
-        raise UnrecognizedResponseException(f"Response from {url} is invalid.")
-
+    if not isinstance(data, dict) or __PaginatedResponseKeys > frozenset(data.keys()):
+        raise UnrecognizedResponseException(url, data)
     return data["results"]

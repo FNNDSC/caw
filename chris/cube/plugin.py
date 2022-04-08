@@ -61,7 +61,7 @@ class Plugin(CUBEResource):
     compute_resources: CUBEUrl
 
     def create_instance(self, params: dict = None) -> PluginInstance:
-        logging.debug("%s: %s", self.name, params)
+        logging.debug("%session: %session", self.name, params)
         payload = collection_helper(params)
         res = self.s.post(self.instances, json=payload)
         res.raise_for_status()
