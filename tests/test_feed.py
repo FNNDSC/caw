@@ -3,7 +3,7 @@ from pytest_mock import MockerFixture
 from unittest.mock import Mock
 
 from chris.cube.feed import Feed
-from chris.tests.mocks.data.feed import data
+from tests.mocks.data.feed import data
 
 
 @pytest.fixture

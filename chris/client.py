@@ -7,8 +7,7 @@ import functools
 from chris.types import (
     CUBEAddress,
     CUBEToken,
-    CUBEUsername,
-    CUBEPassword,
+    Username,
     CUBEUrl,
     PluginInstanceId,
     PluginName,
@@ -57,8 +56,8 @@ class ChrisClient(ConnectedResource):
     def from_login(
         cls,
         address: Union[CUBEAddress, str],
-        username: Union[CUBEUsername, str],
-        password: Union[CUBEPassword, str],
+        username: Union[Username, str],
+        password: str,
     ) -> "ChrisClient":
         login = requests.post(
             address + "auth-token/", json={"username": username, "password": password}
@@ -228,8 +227,8 @@ class ChrisClient(ConnectedResource):
         return peek(self.search_pipelines(name), mt=PipelineNotFoundError)
 
     @functools.cached_property
-    def username(self) -> CUBEUsername:
-        return CUBEUsername(self.__user["username"])
+    def username(self) -> Username:
+        return Username(self.__user["username"])
 
     @functools.cached_property
     def __user(self) -> dict:

@@ -38,20 +38,23 @@ def fetch_paginated_objects(
     constructor: [Dict[str, Any], Session] -> T
         deserializer for yield type
     """
-    for d in _fetch_paginated_raw(session, url):
+    for d in fetch_paginated_raw(session, url):
         yield constructor(d, session)
 
 
-def _fetch_paginated_raw(
+def fetch_paginated_raw(
     session: Session, url: str
 ) -> Generator[Dict[str, Any], None, None]:
+    """
+    Helper function which yields the items from a paginated collection.
+    """
     res = session.get(url)
     res.raise_for_status()
     data = res.json()
 
     yield from __get_results_from(url, data)
     if data["next"]:
-        yield from _fetch_paginated_raw(session, data["next"])
+        yield from fetch_paginated_raw(session, data["next"])
 
 
 class _JSONPaginatedResponse(TypedDict):

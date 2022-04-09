@@ -5,7 +5,7 @@ from datetime import datetime
 from chris.cube.resource.cube_resource import CUBEResource
 from chris.cube.feed import Feed
 from chris.types import (
-    CUBEUsername,
+    Username,
     CUBEUrl,
     PluginName,
     PluginVersion,
@@ -47,7 +47,7 @@ class PluginInstance(CUBEResource):
 
     summary: str
     raw: str
-    owner_username: CUBEUsername
+    owner_username: Username
     cpu_limit: int
     memory_limit: int
     number_of_workers: int

@@ -6,7 +6,7 @@ from chris.types import (
     PluginUrl,
     CUBEUrl,
     PipelineId,
-    CUBEUsername,
+    Username,
     ISOFormatDateString,
     ParameterName,
     ParameterType,

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from chris.types import CUBEUrl, FeedId, ISOFormatDateString, CUBEUsername, FilesUrl
+from chris.types import CUBEUrl, FeedId, ISOFormatDateString, Username, FilesUrl
 
 from chris.helpers.collection import collection_helper
 from chris.cube.resource.templated_resource import ResourceWithTemplate
@@ -18,7 +18,7 @@ class Feed(ResourceWithTemplate):
     creation_date: ISOFormatDateString
     modification_date: ISOFormatDateString
     name: str
-    creator_username: CUBEUsername
+    creator_username: Username
     created_jobs: int
     waiting_jobs: int
     scheduled_jobs: int

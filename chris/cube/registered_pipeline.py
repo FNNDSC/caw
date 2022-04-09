@@ -8,7 +8,7 @@ from chris.cube.resource import CUBEResource
 from chris.types import (
     CUBEUrl,
     PipelineId,
-    CUBEUsername,
+    Username,
     ISOFormatDateString,
     ParameterName,
     ParameterType,
@@ -19,7 +19,7 @@ from chris.types import (
 @dataclass(frozen=True)
 class RegisteredPipeline(CUBEResource, Pipeline):
     id: PipelineId
-    owner_username: CUBEUsername
+    owner_username: Username
     creation_date: ISOFormatDateString
     modification_date: ISOFormatDateString
     plugins: CUBEUrl

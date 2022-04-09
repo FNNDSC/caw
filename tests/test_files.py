@@ -2,14 +2,6 @@ import pytest
 from uuid import uuid4
 from pathlib import Path
 from chris.client import ChrisClient
-from io import BytesIO
-
-
-@pytest.fixture()
-def client() -> ChrisClient:
-    return ChrisClient.from_login(
-        address="http://localhost:8000/api/v1/", username="chris", password="chris1234"
-    )
 
 
 def test_upload_and_download(client: ChrisClient, tmpdir):

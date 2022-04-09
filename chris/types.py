@@ -2,8 +2,7 @@ from typing import NewType, Literal, Union
 
 CUBEToken = NewType("CUBEToken", str)
 CUBEAddress = NewType("CUBEAddress", str)
-CUBEUsername = NewType("CUBEUsername", str)
-CUBEPassword = NewType("CUBEPassword", str)
+Username = NewType("Username", str)
 
 CUBEUrl = NewType("CUBEUrl", str)
 
