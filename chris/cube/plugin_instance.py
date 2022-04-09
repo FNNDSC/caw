@@ -2,11 +2,10 @@ from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
 
-from chris.cube.resource.cube_resource import CUBEResource
+from chris.helpers.connected_resource import ConnectedResource
 from chris.cube.feed import Feed
 from chris.types import (
     Username,
-    CUBEUrl,
     PluginName,
     PluginVersion,
     PluginType,
@@ -15,21 +14,32 @@ from chris.types import (
     PluginId,
     ComputeResourceName,
     SwiftPath,
-    ISOFormatDateString,
     PluginInstanceStatus,
     CUBEErrorCode,
+    PluginInstanceUrl,
+    FeedUrl,
+    PluginUrl,
+    FilesUrl,
+    SplitsUrl,
+    ComputeResourceUrl,
+    PluginInstanceParamtersUrl,
+    DescendantsUrl,
 )
 
+import serde
 
-# It'd be better to use inheritance instead of optionals
+
+# TODO It'd be better to use inheritance instead of optionals
+@serde.deserialize()
 @dataclass(frozen=True)
-class PluginInstance(CUBEResource):
+class PluginInstance(ConnectedResource):
     """
     A *plugin instance* in _ChRIS_ is a computing job, i.e. an attempt to run
     a computation (a non-interactive command-line app) to produce data.
     """
 
-    id: Optional[PluginInstanceId]
+    url: PluginInstanceUrl
+    id: Optional[PluginInstanceId]  # why is this optional again?
     title: str
     compute_resource_name: ComputeResourceName
     plugin_id: PluginId
@@ -39,8 +49,8 @@ class PluginInstance(CUBEResource):
 
     pipeline_inst: Optional[int]
     feed_id: FeedId
-    start_date: ISOFormatDateString
-    end_date: ISOFormatDateString
+    start_date: datetime
+    end_date: datetime
     output_path: SwiftPath
 
     status: PluginInstanceStatus
@@ -54,19 +64,19 @@ class PluginInstance(CUBEResource):
     gpu_limit: int
     error_code: CUBEErrorCode
 
-    previous: CUBEUrl
-    feed: CUBEUrl
-    plugin: CUBEUrl
-    descendants: CUBEUrl
-    files: CUBEUrl
-    parameters: CUBEUrl
-    compute_resource: CUBEUrl
-    splits: CUBEUrl
+    previous: Optional[PluginInstanceUrl]
+    feed: FeedUrl
+    plugin: Optional[PluginUrl]
+    descendants: DescendantsUrl
+    files: FilesUrl
+    parameters: PluginInstanceParamtersUrl
+    compute_resource: ComputeResourceUrl
+    splits: SplitsUrl
 
     previous_id: Optional[int] = None
     """
-    FS plugins will not produce a ``previous_id`` value
-    (even though they will return ``"previous": null``)
+    FS plugins will not produce a `previous_id` value
+    (even though they will return `"previous": null`)
     """
 
     size: Optional[int] = None
@@ -82,13 +92,5 @@ class PluginInstance(CUBEResource):
     """
 
     def get_feed(self) -> Feed:
-        inst_res = self.s.get(self.url).json()
-        feed_url = inst_res["feed"]
-        feed_res = self.s.get(feed_url).json()
-        return Feed(s=self.s, **feed_res)
-
-    def get_start_date(self) -> datetime:
-        return datetime.fromisoformat(self.start_date)
-
-    def get_end_date(self) -> datetime:
-        return datetime.fromisoformat(self.end_date)
+        res = self.session.get(self.feed)
+        return Feed.deserialize(res, self.session)

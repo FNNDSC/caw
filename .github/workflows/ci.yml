@@ -8,6 +8,9 @@ on:
   release:
     types: [ published ]
 
+env:
+  logo: https://ipfs.babymri.org/ipfs/QmXGSK3xxSijcynycL1oKHYWz2QW5z4vVKthkg8utzYsob/ChRISlogo-color.svg.png
+
 jobs:
   test:
     name: Test
@@ -81,3 +84,10 @@ jobs:
         run: poetry install --no-interaction
       - name: Publish to PyPI
         run: poetry publish -u '__token__' -p '${{ secrets.PYPI_API_TOKEN }}'
+      - name: Generate documentation
+        run:  pdoc --logo '${{ env.logo }}' --footer-text='Version ${{ github.ref_name }}' chris -o pdoc
+      - name: Deploy documentation
+        uses: JamesIves/github-pages-deploy-action@v4.2.2
+        with:
+          branch: gh-pages
+          folder: pdoc

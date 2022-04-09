@@ -1,55 +1,46 @@
 from pathlib import Path
 from dataclasses import dataclass, field
 import requests
-from typing import Optional, Union, Generator, Dict
+from requests import Session
+from typing import Optional, Union
 import functools
 
 from chris.types import (
     CUBEAddress,
     CUBEToken,
     Username,
-    CUBEUrl,
     PluginInstanceId,
+    PluginUrl,
     PluginName,
     PluginVersion,
+    PluginInstanceUrl,
 )
 from chris.cube.plugin import Plugin
 from chris.cube.plugin_instance import PluginInstance
-from chris.cube.files import DownloadableFilesGenerator, DownloadableFile
-from chris.cube.registered_pipeline import RegisteredPipeline
-from chris.cube.pagination import fetch_paginated_objects
-from chris.cube.resource import ConnectedResource
+from chris.cube.files import File
+from chris.cube.pipeline import Pipeline
+from chris.helpers.pagination import Paginated
 from chris.errors import (
-    ChrisClientError,
     ChrisIncorrectLoginError,
-    PluginNotFoundError,
     PipelineNotFoundError,
+    PluginNotFoundError,
 )
 from chris.helpers.peek import peek
-
-import logging
-
-logger = logging.getLogger(__name__)
+from chris.cube.base_collection_links import BaseResponse, BaseCollectionLinks
+from chris.helpers.deserialize import deserialize
 
 
 @dataclass(frozen=True)
-class ChrisClient(ConnectedResource):
+class ChrisClient:
 
-    address: CUBEAddress
+    url: CUBEAddress
     token: CUBEToken
 
-    collection_links: Dict[str, CUBEUrl] = field(init=False)
-    s: requests.Session = field(init=False)
-    url: CUBEUrl = field(init=False)
-    """
-    An alias for ``address``
-    """
+    collection_links: BaseCollectionLinks = field(init=False)
+    _s: Session = field(init=False)
 
     def __post_init__(self):
-        if not self.address.endswith("/api/v1/"):
-            raise ValueError('Address of CUBE must end with "/api/v1/"')
-        object.__setattr__(self, "url", self.address)
-        object.__setattr__(self, "s", self.__start_session(self.token))
+        object.__setattr__(self, "_s", self.__authenticated_session(self.token))
         object.__setattr__(self, "collection_links", self.__get_collection_links())
 
     @classmethod
@@ -59,6 +50,8 @@ class ChrisClient(ConnectedResource):
         username: Union[Username, str],
         password: str,
     ) -> "ChrisClient":
+        if not address.endswith("/api/v1/"):
+            raise ValueError('Address of CUBE must end with "/api/v1/"')
         login = requests.post(
             address + "auth-token/", json={"username": username, "password": password}
         )
@@ -68,62 +61,39 @@ class ChrisClient(ConnectedResource):
                 res["non_field_errors"][0] if "non_field_errors" in res else login.text
             )
         login.raise_for_status()
-        return cls(address=address, token=login.json()["token"])
+        return cls(url=address, token=login.json()["token"])
 
     @staticmethod
-    def __start_session(token) -> requests.Session:
+    def __authenticated_session(token: CUBEToken) -> requests.Session:
         s = requests.Session()
         s.headers.update(
             {
                 "Accept": "application/json",
-                "Content-Type": "application/vnd.collection+json",
                 "Authorization": "Token " + token,
             }
         )
         return s
 
-    # TODO all of these links can be cached properties
-
-    def __get_collection_links(self) -> Dict[str, CUBEUrl]:
+    def __get_collection_links(self) -> BaseCollectionLinks:
         """
         Make a request to the CUBE address. Calling this method verifies
         that the login token is correct.
         """
-        res = self.s.get(self.address)
+        res = self._s.get(self.url)
         if res.status_code == 401:
-            data = res.json()
-            raise ChrisIncorrectLoginError(
-                data["detail"] if "detail" in data else res.text
-            )
-        if res.status_code != 200:
-            raise ChrisClientError(f"CUBE response status code was {res.status_code}.")
-        res.raise_for_status()
-        data = res.json()
-        if (
-            "collection_links" not in data
-            or "uploadedfiles" not in data["collection_links"]
-        ):
-            raise ChrisClientError(f"Unexpected CUBE response: {res.text}")
-        return data["collection_links"]
+            raise ChrisIncorrectLoginError(res.json()["detail"])
+        return deserialize(BaseResponse, res).collection_links
 
-    @property
-    def search_addr_plugins(self) -> CUBEUrl:
-        return CUBEUrl(self.address + "plugins/search/")
-
-    @property
-    def search_addr_plugins_instances(self) -> CUBEUrl:
-        return CUBEUrl(self.address + "plugins/instances/search/")
-
-    @property
-    def search_addr_pipelines(self) -> CUBEUrl:
-        return CUBEUrl(self.address + "pipelines/search/")
-
-    def upload(self, local_file: Path, upload_path: str) -> DownloadableFile:
+    def upload(self, local_file: Path, upload_path: str) -> File:
         """
-        Upload a local file into ChRIS backend Swift storage.
+        Upload a local file into *ChRIS*.
 
-        :param local_file: local file path
-        :param upload_path: path in Swift where to upload to
+        Paramters
+        ---------
+        local_file: Path
+            file to upload
+        upload_path: str
+            name of upload destination in *ChRIS* `uploadedfiles` resource
         """
         if not upload_path.startswith(f"{self.username}/uploads/"):
             upload_path = f"{self.username}/uploads/{upload_path}"
@@ -133,106 +103,81 @@ class ChrisClient(ConnectedResource):
                 "upload_path": (None, upload_path),
                 "fname": (local_file.name, file_object),
             }
-            res = self.s.post(
-                self.collection_links["uploadedfiles"],
+            res = self._s.post(
+                self.collection_links.uploadedfiles,
                 files=files,
-                headers={
-                    "Content-Type": None,
-                },
             )
-        res.raise_for_status()
-        return DownloadableFile.deserialize(res.json(), self.s)
 
-    # def get_plugin(self, name_exact="", version="", url="") -> Plugin:
-    #     """
-    #     Get a single plugin, either searching for it by its exact name, or by URL.
-    #
-    #     :param name_exact: name of plugin
-    #     :param version: (optional) version of plugin
-    #     :param url: (alternative to name_exact) url of plugin
-    #     """
-    #     if url:
-    #         return self.get_plugin_by_url(url)
-    #     return self.get_plugin_by_name(name_exact, version)
+        return File.deserialize(res, self._s)
 
-    def get_plugin_by_url(self, url: Union[CUBEUrl, str]):
-        res = self.s.get(url)
-        res.raise_for_status()
-        return Plugin(**res.json(), s=self.s)
+    def get_plugin_by_url(self, url: Union[PluginUrl, str]) -> Plugin:
+        return Plugin.deserialize(self._s.get(url), self._s)
 
-    # def get_plugin_by_name(
-    #     self,
-    #     name_exact: Union[PluginName, str],
-    #     version: Optional[Union[PluginVersion, str]] = None,
-    # ):
-    #     search = self.search_plugin(name_exact, version)
-    #     return peek(search, mt=PluginNotFoundError)
+    def get_plugin_by_name(
+        self,
+        name_exact: Union[PluginName, str],
+        version: Optional[Union[PluginVersion, str]] = None,
+    ):
+        search = self.search_plugin(name_exact, version)
+        return peek(search, mt=PluginNotFoundError)
 
-    # def search_plugin(
-    #     self, name_exact: str, version: Optional[str] = None
-    # ) -> Generator[Plugin, None, None]:
-    #     qs = self._join_qs(name_exact=name_exact, version=version)
-    #     url = CUBEUrl(f"{self.search_addr_plugins}?{qs}")
-    #     return fetch_paginated_objects(session=self.s, url=url, constructor=Plugin)
+    def search_plugin(
+        self, name_exact: str, version: Optional[str] = None
+    ) -> Paginated[Plugin]:
+        qs = self._join_qs(name_exact=name_exact, version=version)
+        return Paginated(
+            item=Plugin,
+            url=f"{self.collection_links.plugins}search/?{qs}",
+            session=self._s,
+        )
 
-    def get_plugin_instance(self, plugin: Union[CUBEUrl, PluginInstanceId]):
+    def get_plugin_instance(
+        self, plugin: Union[PluginInstanceUrl, PluginInstanceId, int, str]
+    ):
         """
         Get a plugin instance.
         :param plugin: Either a plugin instance ID or URL
         :return: plugin instance
         """
-        url = plugin if "/" in plugin else f"{self.address}plugins/instances/{plugin}/"
-        res = self.s.get(url)
-        res.raise_for_status()
-        return PluginInstance(**res.json(), s=self.s)
+        url = plugin if "/" in plugin else f"{self.url}plugins/instances/{plugin}/"
+        res = self._s.get(url)
+        return PluginInstance.deserialize(res, self._s)
 
-    def run(
-        self,
-        plugin_name="",
-        plugin_url="",
-        plugin: Optional[PluginInstance] = None,
-        params: Optional[dict] = None,
-    ) -> PluginInstance:
-        """
-        Create a plugin instance. Either provide a plugin object,
-        or search for a plugin by name or URL.
-        :param plugin: plugin to run
-        :param plugin_name: name of plugin to run
-        :param plugin_url: alternatively specify plugin URL
-        :param params: plugin parameters as key-value pairs (not collection+json)
-        :return:
-        """
-        if not plugin:
-            plugin = self.get_plugin(name_exact=plugin_name, url=plugin_url)
-        return plugin.create_instance(params)
+    def search_files(self, fname="", fname_exact="") -> Paginated[File]:
+        return self._search_files(self.collection_links.files, fname, fname_exact)
 
-    def search_uploadedfiles(
-        self, fname="", fname_exact=""
-    ) -> DownloadableFilesGenerator:
-        qs = self._join_qs(fname=fname, fname_exact=fname_exact)
-        url = CUBEUrl(f"{self.collection_links['uploadedfiles']}search/?{qs}")
-        return self.get_files(url)
-
-    def get_files(self, url: CUBEUrl) -> DownloadableFilesGenerator:
-        return DownloadableFilesGenerator(url=url, session=self.s)
-
-    def search_pipelines(self, name="") -> Generator[RegisteredPipeline, None, None]:
-        return fetch_paginated_objects(
-            session=self.s,
-            url=CUBEUrl(f"{self.collection_links['pipelines']}search/?name={name}"),
-            constructor=RegisteredPipeline,
+    def search_uploadedfiles(self, fname="", fname_exact="") -> Paginated[File]:
+        return self._search_files(
+            self.collection_links.uploadedfiles, fname, fname_exact
         )
 
-    def get_pipeline(self, name: str) -> RegisteredPipeline:
+    def _search_files(
+        self, base_url: str, fname: str, fname_exact: str
+    ) -> Paginated[File]:
+        qs = self._join_qs(fname=fname, fname_exact=fname_exact)
+        url = f"{base_url}search/?{qs}"
+        return self.get_files(url)
+
+    def get_files(self, url: str) -> Paginated[File]:
+        return Paginated(item=File, session=self._s, url=url)
+
+    def search_pipelines(self, name="") -> Paginated[Pipeline]:
+        return Paginated(
+            item=Pipeline,
+            url=f"{self.collection_links.pipelines}search/?name={name}",
+            session=self._s,
+        )
+
+    def get_pipeline(self, name: str) -> Pipeline:
         return peek(self.search_pipelines(name), mt=PipelineNotFoundError)
 
-    @functools.cached_property
+    @property
     def username(self) -> Username:
         return Username(self.__user["username"])
 
     @functools.cached_property
     def __user(self) -> dict:
-        res = self.s.get(url=self.collection_links["user"])
+        res = self._s.get(url=self.collection_links.user)
         res.raise_for_status()
         return res.json()
 

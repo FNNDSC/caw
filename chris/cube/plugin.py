@@ -1,32 +1,33 @@
 from dataclasses import dataclass
-from chris.cube.resource import CUBEResource
 from chris.types import (
     PluginId,
     PluginName,
     PluginType,
     PluginVersion,
-    ISOFormatDateString,
     ContainerImageTag,
-    CUBEUrl,
+    PluginUrl,
+    PluginInstancesUrl,
+    ComputeResourceName,
 )
+from typing import Union, Optional
 from chris.cube.plugin_instance import PluginInstance
-from chris.helpers.collection import collection_helper
-
-import logging
-
-logger = logging.getLogger(__name__)
+from chris.helpers.connected_resource import ConnectedResource
+import serde
+from datetime import datetime
 
 
+@serde.deserialize()
 @dataclass(frozen=True)
-class Plugin(CUBEResource):
+class Plugin(ConnectedResource):
     """
     A *plugin* in *ChRIS* describes a unit of compute.
     To run something on *ChRIS*, a user creates a :class:`PluginInstance`
     of a *plugin*.
     """
 
+    url: PluginUrl
     id: PluginId
-    creation_date: ISOFormatDateString
+    creation_date: datetime
     name: PluginName
 
     version: PluginVersion
@@ -55,14 +56,29 @@ class Plugin(CUBEResource):
     min_memory_limit: int
     max_memory_limit: int
 
-    meta: CUBEUrl
-    parameters: CUBEUrl
-    instances: CUBEUrl
-    compute_resources: CUBEUrl
+    meta: str
+    parameters: str
+    instances: PluginInstancesUrl
+    compute_resources: str
 
-    def create_instance(self, params: dict = None) -> PluginInstance:
-        logging.debug("%session: %session", self.name, params)
-        payload = collection_helper(params)
-        res = self.s.post(self.instances, json=payload)
-        res.raise_for_status()
-        return PluginInstance(**res.json(), s=self.s)
+    def create_instance(
+        self,
+        params: Optional[dict] = None,
+        compute_resource: Optional[Union[ComputeResourceName, str]] = None,
+    ) -> PluginInstance:
+        """
+        Create a plugin instance, i.e. run this plugin.
+
+        Parameters
+        ----------
+        params : dict
+            Parameters to run the plugin with.
+        compute_resource : str
+            Name of compute resource where to run the plugin instance.
+        """
+        if compute_resource:
+            if not params:
+                params = {}
+            params["compute_resource"] = compute_resource
+        res = self.session.post(self.instances, json=params)
+        return PluginInstance.deserialize(res, self.session)

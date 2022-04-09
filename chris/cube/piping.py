@@ -1,13 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
-from chris.cube.resource import CUBEResource
 
 from chris.types import (
     PluginUrl,
-    CUBEUrl,
     PipelineId,
-    Username,
-    ISOFormatDateString,
     ParameterName,
     ParameterType,
     ParameterTypeName,
@@ -18,11 +14,18 @@ from chris.types import (
     PluginVersion,
     PluginId,
     PipingUrl,
+    PluginParametersUrl,
+    PipelineParameterUrl,
+    PipelineUrl,
 )
+from chris.helpers.connected_resource import ConnectedResource
+from serde import deserialize
 
 
+@deserialize()
 @dataclass(frozen=True)
-class PipingParameter(CUBEResource):
+class PipelineParameter(ConnectedResource):
+    url: PipelineParameterUrl
     id: PipelineParameterId
     value: ParameterType
     type: ParameterTypeName
@@ -30,19 +33,21 @@ class PipingParameter(CUBEResource):
     previous_plugin_piping_id: None
     param_name: ParameterName
     param_id: PluginParameterId
-    plugin_piping: CUBEUrl
+    plugin_piping: PipingUrl
     plugin_name: PluginName
     plugin_version: PluginVersion
     plugin_id: PluginId
-    plugin_param: CUBEUrl
+    plugin_param: PluginParametersUrl
 
 
+@deserialize()
 @dataclass(frozen=True)
-class Piping(CUBEResource):
+class Piping(ConnectedResource):
+    url: PipingUrl
     id: PipingId
     plugin_id: PluginId
     pipeline_id: PipelineId
     previous: Optional[PipingUrl]
     plugin: PluginUrl
-    pipeline: CUBEUrl
+    pipeline: PipelineUrl
     previous_id: Optional[PipingId] = None

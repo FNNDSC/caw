@@ -2,8 +2,7 @@ import pytest
 from pytest_mock import MockerFixture
 from unittest.mock import Mock, call
 
-from chris.types import CUBEUrl
-from chris.cube.pagination import fetch_paginated_raw
+from chris.helpers.pagination import fetch_paginated_raw
 
 from tests.mocks.session import mock_session
 from tests.mocks.data.pagination import responses
@@ -15,7 +14,7 @@ def session(mocker: MockerFixture) -> Mock:
 
 
 def test_pagination(session: Mock):
-    url = CUBEUrl("https://example.com/api/v1/something/")
+    url = "https://example.com/api/v1/something/"
     all_things = list(fetch_paginated_raw(session, url))
     assert all_things == [
         {"id": 1},

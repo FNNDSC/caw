@@ -1,0 +1,3 @@
+"""
+*ChRIS* backend resource models.
+"""

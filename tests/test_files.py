@@ -1,4 +1,3 @@
-import pytest
 from uuid import uuid4
 from pathlib import Path
 from chris.client import ChrisClient

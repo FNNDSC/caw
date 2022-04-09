@@ -3,25 +3,52 @@ Pagination helpers.
 """
 
 from dataclasses import dataclass
-from typing import Generator, Any, TypedDict, TypeVar, List, Dict, Callable
-
+from typing import (
+    Generator,
+    Any,
+    TypedDict,
+    TypeVar,
+    List,
+    Dict,
+    Callable,
+    Iterable,
+    Generic,
+    Sized,
+    Type,
+)
+from chris.helpers.connected_resource import ConnectedResource
 from requests import Session
+
+T = TypeVar("T", bound=ConnectedResource)
 
 
 @dataclass(frozen=True)
-class UnrecognizedResponseException(Exception):
+class Paginated(Generic[T], Iterable[T], Sized):
     """
-    Raised when CUBE response could not be deserialized.
+    An iterable object which yields items from a paginated collection,
+    making lazy requests as needed.
+
+    Getting the `len` of a `Paginated` makes a request with `limit=0`
+    and returns the `count` of the paginated collection.
+    This makes it convenient to wrap `Paginated` with
+    [tqdm](https://github.com/tqdm/tqdm).
     """
 
+    item: Type[T]
+    """Type of items in the collection"""
     url: str
-    data: Any
+    """URL of paginated collection, optionally with the query string `limit=N&offset=N`"""
+    session: Session
 
-    def __str__(self) -> str:
-        return f"Invalid response from {repr(self.url)}: {repr(self.data)}"
+    def __len__(self) -> int:
+        res = self.session.get(self.url, params={"limit": 0})
+        data: _JSONPaginatedResponse = res.json()
+        return data["count"]
 
-
-T = TypeVar("T")
+    def __iter__(self) -> Generator[T, None, None]:
+        return fetch_paginated_objects(
+            session=self.session, url=self.url, constructor=self.item.deserialize
+        )
 
 
 def fetch_paginated_objects(
@@ -75,3 +102,16 @@ def __get_results_from(url: str, data: Any) -> List[Dict[str, Any]]:
     if not isinstance(data, dict) or __PaginatedResponseKeys > frozenset(data.keys()):
         raise UnrecognizedResponseException(url, data)
     return data["results"]
+
+
+@dataclass(frozen=True)
+class UnrecognizedResponseException(Exception):
+    """
+    Raised when CUBE response could not be deserialized.
+    """
+
+    url: str
+    data: Any
+
+    def __str__(self) -> str:
+        return f"Invalid response from {repr(self.url)}: {repr(self.data)}"

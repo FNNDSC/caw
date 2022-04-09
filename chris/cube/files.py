@@ -1,14 +1,12 @@
 from os import PathLike
-from dataclasses import dataclass, InitVar, field
+from dataclasses import dataclass
 from contextlib import contextmanager
-from typing import Iterable, Generator, Sized, Iterator, Union, ContextManager
-from requests import Session, Response
+from typing import Iterable, Sized, Iterator, Union, ContextManager
+from requests import Response
 
-from chris.cube.resource import CUBEResource
-from chris.cube.pagination import fetch_paginated_objects
 from chris.types import FileResourceUrl, FileResourceName
-from serde import deserialize
-from serde.json import from_dict
+import serde
+from chris.helpers.connected_resource import ConnectedResource
 
 
 @dataclass(frozen=True)
@@ -28,9 +26,9 @@ class Stream(Iterable[bytes], Sized):
         return self.fsize
 
 
-@deserialize
+@serde.deserialize()
 @dataclass(frozen=True)
-class File:
+class File(ConnectedResource):
     """
     A file in _ChRIS_.
     """
@@ -39,15 +37,6 @@ class File:
     fname: FileResourceName
     fsize: int
     file_resource: FileResourceUrl
-
-
-@dataclass(frozen=True)
-class DownloadableFile(File):
-    """
-    A file in _ChRIS_ which can be downloaded.
-    """
-
-    session: Session
 
     def download(self, destination: Union[str | PathLike], chunk_size=8192):
         """
@@ -79,22 +68,3 @@ class DownloadableFile(File):
         ) as r:
             r.raise_for_status()
             yield Stream(self.fsize, chunk_size, r)
-
-    @classmethod
-    def deserialize(cls, data: dict, session: Session) -> "DownloadableFile":
-        f: File = from_dict(File, data)
-        return cls(f.url, f.fname, f.fsize, f.file_resource, session)
-
-
-@dataclass(frozen=True)
-class DownloadableFilesGenerator(Iterable[DownloadableFile], Sized):
-    url: str
-    session: Session
-
-    def __len__(self) -> int:
-        self.session.get(self.url, params={"limit": 0})
-
-    def __iter__(self) -> Generator[DownloadableFile, None, None]:
-        return fetch_paginated_objects(
-            session=self.session, url=self.url, constructor=DownloadableFile.deserialize
-        )
