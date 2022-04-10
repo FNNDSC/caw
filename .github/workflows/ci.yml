@@ -87,7 +87,7 @@ jobs:
       - name: Publish to PyPI
         run: poetry publish -u '__token__' -p '${{ secrets.PYPI_API_TOKEN }}'
       - name: Generate documentation
-        run:  pdoc --logo '${{ env.logo }}' --footer-text='Version ${{ github.ref_name }}' chris -o pdoc
+        run:  poetry run pdoc --logo '${{ env.logo }}' --footer-text='Version ${{ github.ref_name }}' chris -o pdoc
       - name: Deploy documentation
         uses: JamesIves/github-pages-deploy-action@v4.2.2
         with:
