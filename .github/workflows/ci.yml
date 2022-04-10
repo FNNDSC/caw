@@ -82,6 +82,8 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install project
         run: poetry install --no-interaction
+      - name: Build
+        run: poetry build --no-interaction
       - name: Publish to PyPI
         run: poetry publish -u '__token__' -p '${{ secrets.PYPI_API_TOKEN }}'
       - name: Generate documentation

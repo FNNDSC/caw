@@ -15,6 +15,10 @@ homepage = "https://chrisproject.org"
 repository = "https://github.com/FNNDSC/caw"
 documentation = "https://fnndsc.github.io/caw"
 
+packages = [
+    { include = "chris" }
+]
+
 [tool.poetry.dependencies]
 python = ">=3.8.2,<4.0.0"
 requests = "^2.27.1"
