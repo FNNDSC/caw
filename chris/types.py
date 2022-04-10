@@ -1,4 +1,7 @@
-from typing import NewType, Literal, Union
+from typing import NewType, Union
+from enum import Enum
+
+# pyserde doesn't support typing.Literal
 
 CUBEToken = NewType("CUBEToken", str)
 CUBEAddress = NewType("CUBEAddress", str)
@@ -8,21 +11,10 @@ PluginUrl = NewType("PluginUrl", str)
 PluginId = NewType("PluginId", int)
 PluginName = NewType("PluginName", str)
 PluginVersion = NewType("PluginVersion", str)
-PluginType = Literal["ds", "fs", "ts"]
+
 
 SwiftPath = NewType("SwiftPath", str)
 
-# TODO: PluginInstanceStatus should be an enum
-PluginInstanceStatus = Literal[
-    "created",
-    "waiting",
-    "scheduled",
-    "started",
-    "registeringFiles",
-    "finishedSuccessfully",
-    "finishedWithError",
-    "cancelled",
-]
 
 CUBEErrorCode = NewType("CUBEErrorCode", str)
 
@@ -35,7 +27,7 @@ PipelineId = NewType("PipelineId", int)
 
 ParameterName = NewType("ParameterName", str)
 ParameterType = Union[str, int, float, bool]
-ParameterTypeName = Literal["string", "integer", "float", "boolean"]
+
 PipelineParameterId = NewType("ParameterLocalId", int)
 PluginParameterId = NewType("ParameterGlobalId", int)
 PluginInstanceId = NewType("PluginInstanceId", int)
@@ -68,3 +60,27 @@ PluginParametersUrl = NewType("PluginParametersUrl", str)
 TagsUrl = NewType("TagsUrl", str)
 TaggingsUrl = NewType("TaggingsUrl", str)
 CommentsUrl = NewType("CommentsUrl", str)
+
+
+class PluginType(Enum):
+    ds = "ds"
+    fs = "fs"
+    ts = "ts"
+
+
+class PluginInstanceStatus(Enum):
+    created = "created"
+    waiting = "waiting"
+    scheduled = "scheduled"
+    started = "started"
+    registeringFiles = "registeringFiles"
+    finishedSuccessfully = "finishedSuccessfully"
+    finishedWithError = "finishedWithError"
+    cancelled = "cancelled"
+
+
+class ParameterTypeName(Enum):
+    string = "string"
+    integer = "integer"
+    float = "float"
+    boolean = "boolean"

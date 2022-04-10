@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-import serde
-
+from serde import deserialize
 from chris.types import (
     FeedId,
     Username,
@@ -20,7 +19,20 @@ from typing import List
 from datetime import datetime
 
 
-@serde.deserialize()
+from requests import Response
+
+
+@deserialize
+@dataclass(frozen=True)
+class Note(ConnectedResource):
+    url: NoteUrl
+    id: int
+    title: str
+    content: str
+    feed: FeedUrl
+
+
+@deserialize
 @dataclass(frozen=True)
 class Feed(ConnectedResource):
     """
@@ -50,17 +62,18 @@ class Feed(ConnectedResource):
     plugin_instances: PluginInstancesUrl
 
     def set_name(self, name: str) -> "Feed":
-        self.__put(url=self.url, data={"name": name})
-        return self.__refresh()
-
-    def set_description(self, description: str) -> "Feed":
-        self.__put(url=self.note, data={"title": "Description", "content": description})
-        return self.__refresh()
-
-    def __put(self, url: str, data: dict) -> dict:
-        res = self.session.put(url, json=data)
+        res = self.session.put(self.url, data={"name": name})
         res.raise_for_status()
-        return res.json()
+        return self.__refresh()
+
+    def set_description(self, description: str) -> Note:
+        res = self.session.put(
+            self.note, data={"title": "Description", "content": description}
+        )
+        return Note.deserialize(res, self.session)
+
+    def get_note(self) -> Note:
+        return Note.deserialize(self.session.get(self.note), self.session)
 
     def __refresh(self) -> "Feed":
         res = self.session.get(self.url)
