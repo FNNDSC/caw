@@ -38,7 +38,7 @@ class File(ConnectedResource):
     fsize: int
     file_resource: FileResourceUrl
 
-    def download(self, destination: Union[str | PathLike], chunk_size=8192):
+    def download(self, destination: Union[PathLike, str], chunk_size=8192):
         """
         Download this file to a path.
         """
