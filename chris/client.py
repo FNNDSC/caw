@@ -139,7 +139,10 @@ class ChrisClient:
         :param plugin: Either a plugin instance ID or URL
         :return: plugin instance
         """
-        url = plugin if "/" in plugin else f"{self.url}plugins/instances/{plugin}/"
+        if isinstance(plugin, str) and "/" in plugin:
+            url = plugin
+        else:
+            url = f"{self.url}plugins/instances/{plugin}/"
         res = self._s.get(url)
         return PluginInstance.deserialize(res, self._s)
 

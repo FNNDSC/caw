@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caw"
-version = "0.7.0-a1"
+version = "0.7.0"
 description = "ChRIS client library"
 authors = ["FNNDSC <dev@babyMRI.org>"]
 license = "MIT"
