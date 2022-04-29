@@ -70,6 +70,9 @@
                                 <a class="function" href="#ChrisClient.get_files">get_files</a>
                         </li>
                         <li>
+                                <a class="function" href="#ChrisClient.get_file">get_file</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#ChrisClient.search_pipelines">search_pipelines</a>
                         </li>
                         <li>
@@ -99,7 +102,7 @@
     </ul>
 
 
-            <footer>Version v0.7.1</footer>
+            <footer>Version v0.8.0</footer>
 
         <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev">
             built with <span class="visually-hidden">pdoc</span><img
@@ -250,9 +253,9 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name_exact</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginName</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PluginVersion</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Plugin</span><span class="p">]:</span>
         <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_plugin</span><span class="p">(</span><span class="n">name_exact</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">PluginNotFoundError</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">search_plugin</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">name_exact</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -288,14 +291,22 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_search_files</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fname_exact</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fname_exact</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Paginated</span><span class="p">[</span><span class="n">File</span><span class="p">]:</span>
+        <span class="c1"># TODO hard-coded feed files URL</span>
+        <span class="c1"># https://github.com/FNNDSC/chrs/blob/fd7fdf997c5d751c8a95d510e70bdc5fd0a73f9a/chrs/src/download.rs#L44-L60</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">base_url</span><span class="p">:</span>
+            <span class="n">base_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection_links</span><span class="o">.</span><span class="n">files</span>
         <span class="n">qs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join_qs</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span> <span class="n">fname_exact</span><span class="o">=</span><span class="n">fname_exact</span><span class="p">)</span>
         <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_url</span><span class="si">}</span><span class="s2">search/?</span><span class="si">{</span><span class="n">qs</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_files</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Paginated</span><span class="p">[</span><span class="n">File</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">Paginated</span><span class="p">(</span><span class="n">item</span><span class="o">=</span><span class="n">File</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_s</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname_exact</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">File</span><span class="p">]:</span>
+        <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_files</span><span class="p">(</span><span class="n">fname_exact</span><span class="o">=</span><span class="n">fname_exact</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">search_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Paginated</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">Paginated</span><span class="p">(</span>
@@ -304,8 +315,8 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
             <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_s</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_pipelines</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">mt</span><span class="o">=</span><span class="n">PipelineNotFoundError</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_pipelines</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">username</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Username</span><span class="p">:</span>
@@ -324,7 +335,7 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
 
         </details>
 
-            <div class="docstring"><p>ChrisClient(url: <function NewType.<locals>.new_type at 0x7f3fb0b70b80>, token: <function NewType.<locals>.new_type at 0x7f3fb0b70c10>)</p>
+            <div class="docstring"><p>ChrisClient(url: <function NewType.<locals>.new_type at 0x7fb2b3df7b80>, token: <function NewType.<locals>.new_type at 0x7fb2b3df7c10>)</p>
 </div>
 
 
@@ -467,7 +478,7 @@ upload_path: str
     self,
     name_exact: Union[PluginName, str],
     version: Union[PluginVersion, str, NoneType] = None
-) -&gt; <a href="chris/cube/plugin.html#Plugin">chris.cube.plugin.Plugin</a></span>:
+) -&gt; Union[<a href="chris/cube/plugin.html#Plugin">chris.cube.plugin.Plugin</a>, NoneType]</span>:
     </div>
 
             <details>
@@ -476,9 +487,9 @@ upload_path: str
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name_exact</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginName</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PluginVersion</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Plugin</span><span class="p">]:</span>
         <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_plugin</span><span class="p">(</span><span class="n">name_exact</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">PluginNotFoundError</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -634,6 +645,26 @@ upload_path: str
     
 
                             </div>
+                            <div id="ChrisClient.get_file" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#ChrisClient.get_file">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_file</span><span class="signature">(self, fname_exact: str) -&gt; Union[<a href="chris/cube/files.html#File">chris.cube.files.File</a>, NoneType]</span>:
+    </div>
+
+            <details>
+            <summary>View Source</summary>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname_exact</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">File</span><span class="p">]:</span>
+        <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_files</span><span class="p">(</span><span class="n">fname_exact</span><span class="o">=</span><span class="n">fname_exact</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
                             <div id="ChrisClient.search_pipelines" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#ChrisClient.search_pipelines">#&nbsp;&nbsp</a>
 
@@ -665,13 +696,13 @@ upload_path: str
 
         
             <span class="def">def</span>
-            <span class="name">get_pipeline</span><span class="signature">(self, name: str) -&gt; <a href="chris/cube/pipeline.html#Pipeline">chris.cube.pipeline.Pipeline</a></span>:
+            <span class="name">get_pipeline</span><span class="signature">(self, name: str) -&gt; Union[<a href="chris/cube/pipeline.html#Pipeline">chris.cube.pipeline.Pipeline</a>, NoneType]</span>:
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pipeline</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_pipelines</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">mt</span><span class="o">=</span><span class="n">PipelineNotFoundError</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pipeline</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_pipelines</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 </pre></div>
 
         </details>
@@ -682,7 +713,7 @@ upload_path: str
                             <div id="ChrisClient.username" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#ChrisClient.username">#&nbsp;&nbsp</a>
 
-        <span class="name">username</span><span class="annotation">: &lt;function NewType.&lt;locals&gt;.new_type at 0x7f3fb09e6820&gt;</span>
+        <span class="name">username</span><span class="annotation">: &lt;function NewType.&lt;locals&gt;.new_type at 0x7fb2b3c6d820&gt;</span>
     </div>
 
     
