@@ -20,11 +20,8 @@ from chris.cube.plugin_instance import PluginInstance
 from chris.cube.files import File
 from chris.cube.pipeline import Pipeline
 from chris.helpers.pagination import Paginated
-from chris.errors import (
-    ChrisIncorrectLoginError,
-    PipelineNotFoundError,
-    PluginNotFoundError,
-)
+from chris.errors import ChrisIncorrectLoginError
+
 from chris.helpers.peek import peek
 from chris.cube.base_collection_links import BaseResponse, BaseCollectionLinks
 from chris.helpers.deserialize import deserialize
@@ -117,9 +114,9 @@ class ChrisClient:
         self,
         name_exact: Union[PluginName, str],
         version: Optional[Union[PluginVersion, str]] = None,
-    ) -> Plugin:
+    ) -> Optional[Plugin]:
         search = self.search_plugin(name_exact, version)
-        return peek(search, mt=PluginNotFoundError)
+        return peek(search)
 
     def search_plugin(
         self, name_exact: str, version: Optional[str] = None
@@ -155,14 +152,22 @@ class ChrisClient:
         )
 
     def _search_files(
-        self, base_url: str, fname: str, fname_exact: str
+        self, base_url: str = "", fname: str = "", fname_exact: str = ""
     ) -> Paginated[File]:
+        # TODO hard-coded feed files URL
+        # https://github.com/FNNDSC/chrs/blob/fd7fdf997c5d751c8a95d510e70bdc5fd0a73f9a/chrs/src/download.rs#L44-L60
+        if not base_url:
+            base_url = self.collection_links.files
         qs = self._join_qs(fname=fname, fname_exact=fname_exact)
         url = f"{base_url}search/?{qs}"
         return self.get_files(url)
 
     def get_files(self, url: str) -> Paginated[File]:
         return Paginated(item=File, session=self._s, url=url)
+
+    def get_file(self, fname_exact: str) -> Optional[File]:
+        search = self._search_files(fname_exact=fname_exact)
+        return peek(search)
 
     def search_pipelines(self, name="") -> Paginated[Pipeline]:
         return Paginated(
@@ -171,8 +176,8 @@ class ChrisClient:
             session=self._s,
         )
 
-    def get_pipeline(self, name: str) -> Pipeline:
-        return peek(self.search_pipelines(name), mt=PipelineNotFoundError)
+    def get_pipeline(self, name: str) -> Optional[Pipeline]:
+        return peek(self.search_pipelines(name))
 
     @property
     def username(self) -> Username:

@@ -33,17 +33,5 @@ class ChrisIncorrectLoginError(ChrisError):
     pass
 
 
-class ChrisResourceNotFoundError(ChrisError):
-    pass
-
-
-class PluginNotFoundError(ChrisResourceNotFoundError):
-    pass
-
-
-class PipelineNotFoundError(ChrisResourceNotFoundError):
-    pass
-
-
 class WaitTimeoutException(Exception):
     pass

@@ -19,9 +19,6 @@ from typing import List
 from datetime import datetime
 
 
-from requests import Response
-
-
 @deserialize
 @dataclass(frozen=True)
 class Note(ConnectedResource):
