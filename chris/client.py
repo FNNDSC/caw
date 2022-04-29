@@ -117,7 +117,7 @@ class ChrisClient:
         self,
         name_exact: Union[PluginName, str],
         version: Optional[Union[PluginVersion, str]] = None,
-    ):
+    ) -> Plugin:
         search = self.search_plugin(name_exact, version)
         return peek(search, mt=PluginNotFoundError)
 
@@ -133,7 +133,7 @@ class ChrisClient:
 
     def get_plugin_instance(
         self, plugin: Union[PluginInstanceUrl, PluginInstanceId, int, str]
-    ):
+    ) -> PluginInstance:
         """
         Get a plugin instance.
         :param plugin: Either a plugin instance ID or URL
