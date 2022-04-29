@@ -99,7 +99,7 @@
     </ul>
 
 
-            <footer>Version v0.7.0</footer>
+            <footer>Version v0.7.1</footer>
 
         <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev">
             built with <span class="visually-hidden">pdoc</span><img
@@ -250,7 +250,7 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name_exact</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginName</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PluginVersion</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
         <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_plugin</span><span class="p">(</span><span class="n">name_exact</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">PluginNotFoundError</span><span class="p">)</span>
 
@@ -266,7 +266,7 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
 
     <span class="k">def</span> <span class="nf">get_plugin_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginInstanceUrl</span><span class="p">,</span> <span class="n">PluginInstanceId</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginInstance</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a plugin instance.</span>
 <span class="sd">        :param plugin: Either a plugin instance ID or URL</span>
@@ -324,7 +324,7 @@ _<a href="https://chrisproject.org">ChRIS</a>_.</p>
 
         </details>
 
-            <div class="docstring"><p>ChrisClient(url: <function NewType.<locals>.new_type at 0x7feb013a9b80>, token: <function NewType.<locals>.new_type at 0x7feb013a9c10>)</p>
+            <div class="docstring"><p>ChrisClient(url: <function NewType.<locals>.new_type at 0x7f3fb0b70b80>, token: <function NewType.<locals>.new_type at 0x7f3fb0b70c10>)</p>
 </div>
 
 
@@ -467,7 +467,7 @@ upload_path: str
     self,
     name_exact: Union[PluginName, str],
     version: Union[PluginVersion, str, NoneType] = None
-)</span>:
+) -&gt; <a href="chris/cube/plugin.html#Plugin">chris.cube.plugin.Plugin</a></span>:
     </div>
 
             <details>
@@ -476,7 +476,7 @@ upload_path: str
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name_exact</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginName</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PluginVersion</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
         <span class="n">search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_plugin</span><span class="p">(</span><span class="n">name_exact</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">peek</span><span class="p">(</span><span class="n">search</span><span class="p">,</span> <span class="n">mt</span><span class="o">=</span><span class="n">PluginNotFoundError</span><span class="p">)</span>
 </pre></div>
@@ -521,14 +521,17 @@ upload_path: str
 
         
             <span class="def">def</span>
-            <span class="name">get_plugin_instance</span><span class="signature">(self, plugin: Union[PluginInstanceUrl, PluginInstanceId, int, str])</span>:
+            <span class="name">get_plugin_instance</span><span class="signature">(
+    self,
+    plugin: Union[PluginInstanceUrl, PluginInstanceId, int, str]
+) -&gt; <a href="chris/cube/plugin_instance.html#PluginInstance">chris.cube.plugin_instance.PluginInstance</a></span>:
     </div>
 
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_plugin_instance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PluginInstanceUrl</span><span class="p">,</span> <span class="n">PluginInstanceId</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginInstance</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a plugin instance.</span>
 <span class="sd">        :param plugin: Either a plugin instance ID or URL</span>
@@ -679,7 +682,7 @@ upload_path: str
                             <div id="ChrisClient.username" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#ChrisClient.username">#&nbsp;&nbsp</a>
 
-        <span class="name">username</span><span class="annotation">: &lt;function NewType.&lt;locals&gt;.new_type at 0x7feb0121e820&gt;</span>
+        <span class="name">username</span><span class="annotation">: &lt;function NewType.&lt;locals&gt;.new_type at 0x7f3fb09e6820&gt;</span>
     </div>
 
     
